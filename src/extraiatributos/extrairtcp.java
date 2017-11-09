@@ -88,12 +88,14 @@ public class extrairtcp {
 
 				//obtÃ©m o nÃºmero dados recebidos 
 				num_ack = num_ack + tcp.ack_num;
-
+				
+				//N�o adianta somar o n�mero das portas
+				
 				//obtÃ©m a porta origem
-				porta_origem = porta_origem + tcp.src_port;
+				//porta_origem = porta_origem + tcp.src_port;
 
 				//obtÃ©m a porta destino
-				porta_dest = porta_dest + tcp.dst_port;
+				//porta_dest = porta_dest + tcp.dst_port;
 
 				contador++;
 			}
