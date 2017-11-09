@@ -27,7 +27,6 @@ public class ExtraiAtributos {
     	
     	for (int i = 1; i <= 20; i++) {
             try {
-            	System.out.println(url_fluxos_rotulados);
                 fluxoAlvo = JpcapCaptor.openFile(url_fluxos_rotulados + "\\Fluxo (" + i + ").pcap");
                 extraiatributos.extrairtcp.extraindo(fluxoAlvo);
             } catch (IOException ex) {
