@@ -1,0 +1,11 @@
+feature selection
+
+client-to-server number of packets, 
+client-to-server maximum packet bytes, 
+client-to-server minimum packet bytes, 
+client-to-server average packet bytes, 
+the standard deviation of client-to-server packet bytes, 
+client-to-server minimum interpacket time, 
+server-to-client number of packets, 
+server-to-client maximum packet bytes, 
+server-to-client minimum packet bytes.
