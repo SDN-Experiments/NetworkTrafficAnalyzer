@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -24,6 +25,11 @@ public class extrairtcp {
 	static Path file = Paths.get("weka_input_web.arff");
 
 	public static void escreveArquivo (List<String> fluxo) throws IOException {
+		
+		//Se o arquivo não existe, cria.
+		if (!Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
+		    Files.createFile(file);
+		}
 		Files.write(file, fluxo, Charset.forName("UTF-8"), StandardOpenOption.APPEND);
 	}
 	public static void extraindo(JpcapCaptor pcaptor) throws IOException {    	
@@ -114,6 +120,6 @@ public class extrairtcp {
 		
 		fluxos.add(maior_bytes+ "," +menor_bytes+ "," +janela+ "," +media_janela+ "," +payload+ "," +media_payload+ "," +comp_cabecalho+ "," + media_comprimento + "," +num_sequencia+ "," + media_num_sequencia+ "," +num_ack+ "," +media_num_ack+ ",p2p");
 		escreveArquivo(fluxos);
-		System.out.println(maior_bytes+ "," +menor_bytes+ "," +janela+ "," +media_janela+ "," +payload+ "," +media_payload+ "," +comp_cabecalho+ "," + media_comprimento + "," +num_sequencia+ "," + media_num_sequencia+ "," +num_ack+ "," +media_num_ack+ ",p2p");
+		//System.out.println(maior_bytes+ "," +menor_bytes+ "," +janela+ "," +media_janela+ "," +payload+ "," +media_payload+ "," +comp_cabecalho+ "," + media_comprimento + "," +num_sequencia+ "," + media_num_sequencia+ "," +num_ack+ "," +media_num_ack+ ",p2p");
 	}
 }

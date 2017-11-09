@@ -9,3 +9,35 @@ client-to-server minimum interpacket time,
 server-to-client number of packets, 
 server-to-client maximum packet bytes, 
 server-to-client minimum packet bytes.
+
+Fonte: Robust Network Traffic Classification
+----------------------------------------------------------------------------
+
+Minimum, maximum, and standard deviation of packets.
+Mean, maximum, and standard deviation of packets.
+Minimum, mean, maximum, and standard deviation of
+inter packet time in the forward direction.
+Mean, maximum, and standard deviation of inter packet
+time in the reverse direction.
+Duration of the flow.
+Whether there was a PSH flag in the forward direction.
+Total size of the headers in each direction.
+
+Fonte: Improved Classification of Known and Unknown Network Traffic Flows using Semi-Supervised Machine Learning
+-----------------------------------------------------------------------------
+
+Duration - Length of the connection in seconds
+Protocol - Type Type of the protocol
+Service - Service on the destination port
+Source - Bytes Number of bytes that are sent from source to destination
+
+100 connection window host based features
+
+Host count - Number of connections that are to the same host
+SYN error rate Percent of connections that have SYN errors
+
+100 connection window service based features
+
+Service count Number of connections to the same service
+Service SYN error rate
+Percent of connections that have SYN errors
