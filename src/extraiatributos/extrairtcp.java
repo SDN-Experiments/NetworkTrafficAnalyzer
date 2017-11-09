@@ -111,7 +111,7 @@ public class extrairtcp {
 				//obtem o comprimento do cabe�alho TCP 
 				comp_cabecalhotcp = comp_cabecalhotcp + tcp.header.length;
 
-				//obtem o comprimento do pacote
+				//obtem o comprimento do pacote IP
 				comp_pacote = comp_pacote + tcp.length;
 
 
