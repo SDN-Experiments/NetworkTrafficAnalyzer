@@ -132,7 +132,7 @@ public class extrairtcp {
 		long media_num_ack = num_ack / contador; //media do nÃƒÂºmero de dados recebidos 
 		 */
 
-		fluxos.add(+janela+ "," +payload+ "," +comp_cabecalhotcp+ "," +comp_pacote+ ", p2p");
+		fluxos.add(+janela+ "," +payload+ "," +comp_cabecalhotcp+ "," +comp_pacote+ ",p2p");
 		escreveArquivo(fluxos);
 	}
 }
