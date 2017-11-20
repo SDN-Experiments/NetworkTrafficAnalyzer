@@ -23,6 +23,10 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import tcp
+#from ryu.custom.host2host import host2host
+import sys
+
+import math
 import sys
 
 
@@ -37,6 +41,7 @@ class WekaTreeSwitch(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(WekaTreeSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        self.host2host_instance = {}
 
 
 
@@ -110,19 +115,23 @@ class WekaTreeSwitch(app_manager.RyuApp):
 
         eth = pkt.get_protocols(ethernet.ethernet)[0]
 
+        dst = eth.dst
+        src = eth.src
+
         #Tamanho Janela TCP
         if eth.ethertype == ether_types.ETH_TYPE_IP:
             ipv4_temp = pkt.get_protocol(ipv4.ipv4)
             tcp_temp = pkt.get_protocol(tcp.tcp)
             #Clinte-To-Server
-            self.logger.debug("* Desencaplusando... ")
+            self.logger.debug("*** Desencaplusando... ")
             self.logger.debug("(PKT):  %s ", pkt)
             self.logger.debug("(TCP):  %s ", tcp_temp)
             self.logger.debug("(IP):  %s ", ipv4_temp)
+            self.logger.debug("(IP) Code Protocol:   %s ", ipv4_temp.proto)
             self.logger.debug("============== /// ==============")
 
             if len(tcp_temp) > 0 and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]):
-                self.logger.debug("* Info  Extracting Attributes Choosen... ")
+                self.logger.debug("*** Info  Extracting Attributes Choosen... ")
                 self.logger.debug("(TCP) porta Origem:  %s ", tcp_temp.src_port)
                 self.logger.debug("(TCP) Porta Destino :  %s ", tcp_temp.dst_port)
 
@@ -138,13 +147,43 @@ class WekaTreeSwitch(app_manager.RyuApp):
 
                 self.logger.debug("(IP) Comprimento Cabecalho :  %s ",ipv4_temp.header_length )
                 self.logger.debug("============== /// ==============")
+
+                #dpid = datapath.id
+                #self.host2host_instance.setdefault(dpid, {})
+
+                h2h = None
+                key = src + dst
+                if len(self.host2host_instance) > 0:
+                    if  key in self.host2host_instance:
+                        h2h = self.host2host_instance[key]
+                        h2h.updateStateHostToHostByPacket(payload)
+                    else:
+                        #self.host2host_instance.setdefault(src + dst, {})
+                        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                        self.host2host_instance[key] = h2h
+                else:
+                    #self.host2host_instance.setdefault(src + dst, {})
+                    h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                    self.host2host_instance[key] = h2h
+
+
+                self.printInstanceH2H()
+
                 #Classificador J48 Tree
-                fluxo_classe = self.weka_decision_tree(tcp_temp.window_size, payload,ipv4_temp.total_length, ipv4_temp.header_length)
+                #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
+                fluxo_classe = self.weka_decision_tree(h2h.src_port,
+                h2h.dst_port,
+                h2h.smaller_packet_size,
+                h2h.bigger_packet_size,
+                h2h.protocol_code
+                )
+
                 self.logger.debug("(Class):  %s", fluxo_classe)
 
 
-        dst = eth.dst
-        src = eth.src
+
+
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
@@ -179,332 +218,131 @@ class WekaTreeSwitch(app_manager.RyuApp):
                                   in_port=in_port, actions=actions, data=data)
         datapath.send_msg(out)
 
-    #!/usr/bin/python
-# -*- coding: utf-8 -*-
-    def weka_decision_tree(self,TamanhoPayload, TamanhoJanela, CompPacoteIp, comp_cabecalhotcp ):
-        if TamanhoPayload <= 136:
-            if CompPacoteIp <= 430:
-                if TamanhoPayload <= 67:
-                    return 'ftp'
-                elif TamanhoPayload > 67:
-                    return 'p2p'
-            elif CompPacoteIp > 430:
-                return 'p2p'
-        elif TamanhoPayload > 136:
-            if TamanhoJanela <= 170584:
-                if TamanhoJanela <= 39479:
-                    if TamanhoPayload <= 3467:
-                        if TamanhoJanela <= 23770:
-                            if TamanhoJanela <= 15210:
-                                return 'web'
-                            elif TamanhoJanela > 15210:
-                                return 'p2p'
-                        elif TamanhoJanela > 23770:
-                            if comp_cabecalhotcp <= 1136:
-                                if comp_cabecalhotcp <= 688:
-                                    return 'web'
-                                elif comp_cabecalhotcp > 688:
-                                    if TamanhoJanela <= 26193:
-                                        return 'web'
-                                    elif TamanhoJanela > 26193:
-                                        if TamanhoJanela <= 36266:
-                                            if TamanhoJanela <= 28778:
-                                                if CompPacoteIp <= 2160:
-                                                    return 'p2p'
-                                                elif CompPacoteIp > 2160:
-                                                    return 'web'
-                                            elif TamanhoJanela > 28778:
-                                                return 'p2p'
-                                        elif TamanhoJanela > 36266:
-                                            return 'web'
-                            elif comp_cabecalhotcp > 1136:
-                                if comp_cabecalhotcp <= 2310:
-                                    return 'p2p'
-                                elif comp_cabecalhotcp > 2310:
-                                    if CompPacoteIp <= 4415:
-                                        return 'ftp'
-                                    elif CompPacoteIp > 4415:
-                                        return 'p2p'
-                    elif TamanhoPayload > 3467:
-                        if comp_cabecalhotcp <= 2608:
-                            return 'web'
-                        elif comp_cabecalhotcp > 2608:
-                            if TamanhoPayload <= 35386:
-                                return 'p2p'
-                            elif TamanhoPayload > 35386:
-                                if TamanhoJanela <= 36418:
-                                    return 'web'
-                                elif TamanhoJanela > 36418:
-                                    if comp_cabecalhotcp <= 5004:
-                                        return 'p2p'
-                                    elif comp_cabecalhotcp > 5004:
-                                        if CompPacoteIp <= 171812:
-                                            return 'web'
-                                        elif CompPacoteIp > 171812:
-                                            return 'p2p'
-                elif TamanhoJanela > 39479:
-                    if TamanhoPayload <= 82566:
-                        if TamanhoJanela <= 47517:
-                            if comp_cabecalhotcp <= 1294:
-                                return 'web'
-                            elif comp_cabecalhotcp > 1294:
-                                if CompPacoteIp <= 3271:
-                                    return 'ftp'
-                                elif CompPacoteIp > 3271:
-                                    if CompPacoteIp <= 17321:
-                                        return 'p2p'
-                                    elif CompPacoteIp > 17321:
-                                        if CompPacoteIp <= 39769:
-                                            return 'web'
-                                        elif CompPacoteIp > 39769:
-                                            return 'p2p'
-                        elif TamanhoJanela > 47517:
-                            if comp_cabecalhotcp <= 4668:
-                                return 'web'
-                            elif comp_cabecalhotcp > 4668:
-                                if CompPacoteIp <= 46843:
-                                    return 'p2p'
-                                elif CompPacoteIp > 46843:
-                                    return 'web'
-                    elif TamanhoPayload > 82566:
-                        if TamanhoJanela <= 108317:
-                            if CompPacoteIp <= 355937:
-                                return 'p2p'
-                            elif CompPacoteIp > 355937:
-                                return 'web'
-                        elif TamanhoJanela > 108317:
-                            if CompPacoteIp <= 278656:
-                                return 'web'
-                            elif CompPacoteIp > 278656:
-                                return 'p2p'
-            elif TamanhoJanela > 170584:
-                if TamanhoJanela <= 12945544:
-                    if CompPacoteIp <= 600:
+    def weka_decision_tree(self, srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo):
+        if codigo_protocolo <= 6:
+            if tamtotal_pacote_menor <= 54:
+                return 'ftp'
+            elif tamtotal_pacote_menor > 54:
+                if dstporta <= 80:
+                    return 'web'
+                elif dstporta > 80:
+                    if srcporta <= 2632:
                         return 'web'
-                    elif CompPacoteIp > 600:
-                        if comp_cabecalhotcp <= 568:
-                            if TamanhoJanela <= 273558:
-                                return 'ftp'
-                            elif TamanhoJanela > 273558:
-                                if TamanhoJanela <= 328217:
+                    elif srcporta > 2632:
+                        if tamtotal_pacote_menor <= 60:
+                            if dstporta <= 7957:
+                                if dstporta <= 443:
                                     return 'web'
-                                elif TamanhoJanela > 328217:
-                                    if comp_cabecalhotcp <= 474:
-                                        return 'ftp'
-                                    elif comp_cabecalhotcp > 474:
-                                        if CompPacoteIp <= 1857:
-                                            return 'p2p'
-                                        elif CompPacoteIp > 1857:
-                                            return 'ftp'
-                        elif comp_cabecalhotcp > 568:
-                            if TamanhoPayload <= 4922:
-                                if TamanhoJanela <= 630655:
-                                    if TamanhoPayload <= 225:
-                                        return 'p2p'
-                                    elif TamanhoPayload > 225:
-                                        if comp_cabecalhotcp <= 1014:
-                                            if TamanhoPayload <= 1115:
-                                                if TamanhoJanela <= 486442:
-                                                    if TamanhoJanela \
-        <= 409674:
-                                                        return 'web'
-                                                    elif TamanhoJanela \
-        > 409674:
-                                                        if comp_cabecalhotcp \
-        <= 738:
-                                                            return 'p2p'
-                                                        elif comp_cabecalhotcp \
-        > 738:
-                                                            return 'web'
-                                                elif TamanhoJanela > 486442:
-                                                    return 'p2p'
-                                            elif TamanhoPayload > 1115:
-                                                return 'web'
-                                        elif comp_cabecalhotcp > 1014:
-                                            if TamanhoPayload <= 3117:
-                                                if TamanhoJanela <= 206079:
-                                                    return 'p2p'
-                                                elif TamanhoJanela > 206079:
-                                                    if comp_cabecalhotcp \
-        <= 1398:
-                                                        return 'web'
-                                                    elif comp_cabecalhotcp \
-        > 1398:
-                                                        if TamanhoJanela \
-        <= 236704:
-                                                            return 'web'
-                                                        elif TamanhoJanela \
-        > 236704:
-                                                            return 'p2p'
-                                            elif TamanhoPayload > 3117:
-                                                return 'web'
-                                elif TamanhoJanela > 630655:
-                                    if TamanhoJanela <= 2691633:
-                                        return 'p2p'
-                                    elif TamanhoJanela > 2691633:
-                                        return 'ftp'
-                            elif TamanhoPayload > 4922:
-                                if comp_cabecalhotcp <= 1770:
-                                    if TamanhoJanela <= 236704:
-                                        return 'web'
-                                    elif TamanhoJanela > 236704:
-                                        if TamanhoJanela <= 375881:
-                                            if comp_cabecalhotcp <= 1398:
-                                                return 'ftp'
-                                            elif comp_cabecalhotcp > 1398:
-                                                return 'web'
-                                        elif TamanhoJanela > 375881:
-                                            if TamanhoPayload <= 10712:
-                                                if comp_cabecalhotcp <= 846:
-                                                    if TamanhoJanela \
-        <= 517729:
-                                                        return 'web'
-                                                    elif TamanhoJanela \
-        > 517729:
-                                                        return 'ftp'
-                                                elif comp_cabecalhotcp \
-        > 846:
-                                                    return 'web'
-                                            elif TamanhoPayload > 10712:
-                                                if TamanhoJanela <= 639512:
-                                                    return 'ftp'
-                                                elif TamanhoJanela > 639512:
-                                                    if comp_cabecalhotcp \
-        <= 1444:
-                                                        return 'ftp'
-                                                    elif comp_cabecalhotcp \
-        > 1444:
-                                                        return 'web'
-                                elif comp_cabecalhotcp > 1770:
-                                    if TamanhoJanela <= 560387:
-                                        if TamanhoPayload <= 621997:
-                                            return 'web'
-                                        elif TamanhoPayload > 621997:
-                                            return 'p2p'
-                                    elif TamanhoJanela > 560387:
-                                        if comp_cabecalhotcp <= 16008:
-                                            if TamanhoPayload <= 151772:
-                                                if TamanhoJanela <= 3509958:
-                                                    if TamanhoPayload \
-        <= 21990:
-                                                        if TamanhoJanela \
-        <= 2037460:
-                                                            return 'web'
-                                                        elif TamanhoJanela \
-        > 2037460:
-                                                            return 'p2p'
-                                                    elif TamanhoPayload \
-        > 21990:
-                                                        if comp_cabecalhotcp \
-        <= 3592:
-                                                            if TamanhoJanela \
-        <= 1250272:
-                                                                if TamanhoPayload \
-        <= 32275:
-                                                                    if TamanhoJanela \
-        <= 827803:
-                                                                        return 'ftp'
-                                                                    elif TamanhoJanela \
-        > 827803:
-                                                                        return 'web'
-                                                                elif TamanhoPayload \
-        > 32275:
-                                                                    return 'ftp'
-                                                            elif TamanhoJanela \
-        > 1250272:
-                                                                if TamanhoJanela \
-        <= 2648452:
-                                                                    return 'web'
-                                                                elif TamanhoJanela \
-        > 2648452:
-                                                                    return 'p2p'
-                                                        elif comp_cabecalhotcp \
-        > 3592:
-                                                            if TamanhoJanela \
-        <= 1457064:
-                                                                if comp_cabecalhotcp \
-        <= 3884:
-                                                                    return 'web'
-                                                                elif comp_cabecalhotcp \
-        > 3884:
-                                                                    if TamanhoPayload \
-        <= 40301:
-                                                                        return 'p2p'
-                                                                    elif TamanhoPayload \
-        > 40301:
-                                                                        if comp_cabecalhotcp \
-        <= 9520:
-                                                                            return 'web'
-                                                                        elif comp_cabecalhotcp \
-        > 9520:
-                                                                            if comp_cabecalhotcp \
-        <= 11916:
-                                                                                return 'p2p'
-                                                                            elif comp_cabecalhotcp \
-        > 11916:
-                                                                                return 'web'
-                                                            elif TamanhoJanela \
-        > 1457064:
-                                                                if CompPacoteIp \
-        <= 63801:
-                                                                    return 'web'
-                                                                elif CompPacoteIp \
-        > 63801:
-                                                                    return 'ftp'
-                                                elif TamanhoJanela \
-        > 3509958:
-                                                    if CompPacoteIp \
-        <= 69032:
-                                                        return 'p2p'
-                                                    elif CompPacoteIp \
-        > 69032:
-                                                        if TamanhoJanela \
-        <= 7299764:
-                                                            return 'web'
-                                                        elif TamanhoJanela \
-        > 7299764:
-                                                            return 'p2p'
-                                            elif TamanhoPayload > 151772:
-                                                if TamanhoJanela <= 1773867:
-                                                    return 'web'
-                                                elif TamanhoJanela \
-        > 1773867:
-                                                    if comp_cabecalhotcp \
-        <= 11830:
-                                                        return 'ftp'
-                                                    elif comp_cabecalhotcp \
-        > 11830:
-                                                        if TamanhoPayload \
-        <= 215927:
-                                                            return 'web'
-                                                        elif TamanhoPayload \
-        > 215927:
-                                                            return 'ftp'
-                                        elif comp_cabecalhotcp > 16008:
-                                            if TamanhoJanela <= 11615977:
-                                                if TamanhoJanela <= 1549788:
-                                                    return 'p2p'
-                                                elif TamanhoJanela \
-        > 1549788:
-                                                    if CompPacoteIp \
-        <= 3678517:
-                                                        return 'web'
-                                                    elif CompPacoteIp \
-        > 3678517:
-                                                        return 'p2p'
-                                            elif TamanhoJanela > 11615977:
-                                                return 'ftp'
-                elif TamanhoJanela > 12945544:
-                    if TamanhoPayload <= 1179951:
-                        if CompPacoteIp <= 1094127:
-                            if TamanhoJanela <= 22425083:
-                                if TamanhoJanela <= 19075583:
+                                elif dstporta > 443:
                                     return 'p2p'
-                                elif TamanhoJanela > 19075583:
-                                    return 'web'
-                            elif TamanhoJanela > 22425083:
+                            elif dstporta > 7957:
                                 return 'p2p'
-                        elif CompPacoteIp > 1094127:
-                            return 'ftp'
-                    elif TamanhoPayload > 1179951:
-                        return 'ftp'
+                        elif tamtotal_pacote_menor > 60:
+                            if tamtotal_pacote_maior <= 81:
+                                return 'ftp'
+                            elif tamtotal_pacote_maior > 81:
+                                return 'p2p'
+        elif codigo_protocolo > 6:
+            return 'dns'
+
+    def printInstanceH2H(self):
+        for key in self.host2host_instance:
+            self.logger.debug("*** Info  Accumalate h2h : (%s) ", key)
+            self.logger.debug("(src_port) : %s",self.host2host_instance[key].src_port )
+            self.logger.debug("(dst_port) : %s",self.host2host_instance[key].dst_port )
+            self.logger.debug("(smaller packet) : %s",self.host2host_instance[key].smaller_packet_size )
+            self.logger.debug("(bigger packet) : %s",self.host2host_instance[key].bigger_packet_size )
+            self.logger.debug("(qt_packets ) : %s",self.host2host_instance[key].qt_packets )
+            self.logger.debug("(sum_size_packet) : %s",self.host2host_instance[key].sum_size_packet )
+            self.logger.debug("(median_packet_size ) : %s",self.host2host_instance[key].median_packet_size )
+            self.logger.debug("(var_packet_size) : %s",self.host2host_instance[key].var_packet_size )
+            self.logger.debug("(std_dev_packet_size ) : %s",self.host2host_instance[key].std_dev_packet_size )
+            self.logger.debug("(std_dev_packet_size ) : %s",self.host2host_instance[key].values_size_packet )
+            self.logger.debug("============== /// ==============")
+
+
+
+
+class host2host(object):
+
+    src_port = 0
+    dst_port = 0
+
+    bigger_packet_size = -sys.maxsize
+    smaller_packet_size = sys.maxsize
+
+    median_packet_size = 0
+    std_dev_packet_size = 0
+    var_packet_size = 0.0
+
+    sum_size_packet = 0
+    qt_packets = 0
+    values_size_packet = []
+
+    length_header_IP = 0
+    protocol_code = 0
+
+
+    def __init__(
+        self,
+        src_port,
+        dst_port,
+        size_packet,
+        length_header_IP,
+        protocol_code,
+        ):
+        self.src_port = src_port
+        self.dst_port = dst_port
+        self.size_packet = size_packet
+        self.length_header_IP = length_header_IP
+        self.protocol_code = protocol_code
+        self.updateStateHostToHost()
+
+    def updateStateHostToHost(self):
+        self.qt_packets += 1
+        self.values_size_packet.append(self.size_packet)
+        self.sum_size_packet += self.size_packet
+        self.checkGreaterBytesPacket(self.size_packet)
+        self.checkSmallerBytesPacket(self.size_packet)
+        self.computeAverage()
+        self.computeVariance()
+        self.computeStandardDeviation()
+
+
+    def updateStateHostToHostByPacket(self, size_packet):
+        self.qt_packets += 1
+        self.values_size_packet.append(size_packet)
+        self.sum_size_packet += size_packet
+        self.checkGreaterBytesPacket(size_packet)
+        self.checkSmallerBytesPacket(size_packet)
+        self.computeAverage()
+        self.computeVariance()
+        self.computeStandardDeviation()
+
+    def checkSmallerBytesPacket(self, bytesPacket):
+        if bytesPacket < self.smaller_packet_size:
+            self.smaller_packet_size = bytesPacket
+
+    def checkGreaterBytesPacket(self, bytesPacket):
+        if bytesPacket > self.bigger_packet_size:
+            self.bigger_packet_size = bytesPacket
+
+    def computeAverage(self):
+        self.median_packet_size = self.sum_size_packet / self.qt_packets
+
+    def computeStandardDeviation(self):
+        self.std_dev_packet_size = math.sqrt(self.var_packet_size)
+
+    def computeVariance(self):
+        sum_variance = 0.0
+        for value_size_packet in self.values_size_packet:
+            sum_variance += math.pow(value_size_packet
+                    - self.median_packet_size, 2)
+
+        self.var_packet_size = sum_variance / self.qt_packets
+
+    def equals(self, o):
+        if self.src_port == o.src_port and self.src_port == o.dst_port:
+            self.updateStateHostToHostByPacket(o.size_packet)
+            return True
+        return False

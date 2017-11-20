@@ -107,7 +107,8 @@ def webdemo( ):
     net = Mininet( topo=topo,
     controller=lambda name: RemoteController( name = 'c0', ip='192.168.56.104' ),
       link=TCLink,
-      switch=OVSKernelSwitch)
+      switch=OVSKernelSwitch,
+      autoSetMacs=True)
 
 
     h1, web, sw = net.get( 'h1', 'web' , 's1')
@@ -128,15 +129,23 @@ def webdemo( ):
     # web.cmd("ip address add 10.0.0.50/24 dev h2-eth0")
 
 
-    net.start()
+
     #verifyConnection(h1, web)
     # And an web server
+    net.start()
+
     startWebServer( web )
 
     clientRequestToServer(h1)
 
     stopWebServer( web )
+
+
+
+
     net.stop()
+
+
 
 def clientRequestToServer(h1):
     # Make sure we can fetch get request
