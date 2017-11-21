@@ -23,6 +23,7 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import tcp
+from ryu.lib.packet import udp
 #from ryu.custom.host2host import host2host
 import sys
 
@@ -33,6 +34,8 @@ import sys
 TCP_SYN = 0x002
 
 TCP_ACK = 0x010
+TCP_CODE = 6
+UDP_CODE = 17
 
 
 class WekaTreeSwitch(app_manager.RyuApp):
@@ -122,31 +125,33 @@ class WekaTreeSwitch(app_manager.RyuApp):
         if eth.ethertype == ether_types.ETH_TYPE_IP:
             ipv4_temp = pkt.get_protocol(ipv4.ipv4)
             tcp_temp = pkt.get_protocol(tcp.tcp)
+
+            udp_temp = pkt.get_protocol(udp.udp)
             #Clinte-To-Server
             self.logger.debug("*** Desencaplusando... ")
-            self.logger.debug("(PKT):  %s ", pkt)
-            self.logger.debug("(TCP):  %s ", tcp_temp)
+            #self.logger.debug("(PKT):  %s ", pkt)
+            # Tamanho Payloada
+            payload = sys.getsizeof(pkt.data)
+            self.logger.debug("(PKT) Tamanho Payload Pacote :  %s ", payload)
             self.logger.debug("(IP):  %s ", ipv4_temp)
             self.logger.debug("(IP) Code Protocol:   %s ", ipv4_temp.proto)
+            #comprimento Pacote Ip
+            self.logger.debug("(IP) Comprimento :  %s ", ipv4_temp.total_length)
+            #Comprimento comp_cabecalho TCP
+            self.logger.debug("(IP) Comprimento Cabecalho :  %s ",ipv4_temp.header_length )
             self.logger.debug("============== /// ==============")
+            self.logger.debug("(TCP):  %s ", tcp_temp)
+            self.logger.debug("(UDP):  %s ", udp_temp)
 
-            if len(tcp_temp) > 0 and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]):
+            #Web
+            if tcp_temp != None and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]) and ipv4_temp.proto == 6:
                 self.logger.debug("*** Info  Extracting Attributes Choosen... ")
                 self.logger.debug("(TCP) porta Origem:  %s ", tcp_temp.src_port)
                 self.logger.debug("(TCP) Porta Destino :  %s ", tcp_temp.dst_port)
 
                 self.logger.debug("(TCP) Tamanho Janela :  %s ", tcp_temp.window_size)
 
-                # Tamanho Payloada
-                payload = sys.getsizeof(pkt.data)
-                self.logger.debug("(PKT) Tamanho Payload Pacote :  %s ", payload)
-                #comprimento Pacote Ip
-                self.logger.debug("(IP) Comprimento :  %s ", ipv4_temp.total_length)
-                #Comprimento comp_cabecalho TCP
 
-
-                self.logger.debug("(IP) Comprimento Cabecalho :  %s ",ipv4_temp.header_length )
-                self.logger.debug("============== /// ==============")
 
                 #dpid = datapath.id
                 #self.host2host_instance.setdefault(dpid, {})
@@ -182,6 +187,45 @@ class WekaTreeSwitch(app_manager.RyuApp):
                 self.logger.debug("(Class):  %s", fluxo_classe)
 
 
+            if udp_temp != None and ipv4_temp.proto == UDP_CODE:
+                self.logger.debug("*** Info  Extracting Attributes (UDP) Choosen... ")
+                self.logger.debug("(UDP) porta Origem:  %s ", udp_temp.src_port)
+                self.logger.debug("(UDP) Porta Destino :  %s ", udp_temp.dst_port)
+
+                self.logger.debug("============== /// ==============")
+
+                #dpid = datapath.id
+                #self.host2host_instance.setdefault(dpid, {})
+
+                h2h = None
+                key = src + dst
+                if len(self.host2host_instance) > 0:
+                    if  key in self.host2host_instance:
+                        h2h = self.host2host_instance[key]
+                        h2h.updateStateHostToHostByPacket(payload)
+                    else:
+                        #self.host2host_instance.setdefault(src + dst, {})
+                        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                        self.host2host_instance[key] = h2h
+                else:
+                    #self.host2host_instance.setdefault(src + dst, {})
+                    h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                    self.host2host_instance[key] = h2h
+
+
+                self.printInstanceH2H()
+
+                #Classificador J48 Tree
+                #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
+                fluxo_classe = self.weka_decision_tree(h2h.src_port,
+                h2h.dst_port,
+                h2h.smaller_packet_size,
+                h2h.bigger_packet_size,
+                h2h.protocol_code
+                )
+
+                self.logger.debug("(Class):  %s", fluxo_classe)
 
 
 
