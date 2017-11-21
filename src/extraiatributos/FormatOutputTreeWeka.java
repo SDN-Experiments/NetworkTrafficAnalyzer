@@ -53,6 +53,13 @@ public class FormatOutputTreeWeka {
 				  temp.replace(start_index_p2p, end_index_p2p, "\"p2p\"");
 			  }
 			  
+			  int start_index_dns =  temp.indexOf("dns");
+
+			  if(start_index_dns > -1){
+				  int end_index_dns = start_index_dns + 3;
+				  temp.replace(start_index_dns, end_index_dns, "\"dns\"");
+			  }
+			  
 			  boolean greater =  temp.indexOf(">") > -1 ? true: false;
 			  boolean smaller =  temp.indexOf("<") > -1 ? true: false;
 			  boolean smaller_equal =  temp.indexOf("<=") > -1 ? true: false;
@@ -91,7 +98,7 @@ public class FormatOutputTreeWeka {
 			   } 
 			   index_barra_anterior = index_barra_atual;
 			  String remove_barra = temp.toString();
-			  remove_barra = remove_barra.replace("|", " ");
+			  remove_barra = remove_barra.replace("|", " ").replace("﻿", "");
 					  
 			  System.out.println(remove_barra);
 			  
