@@ -41,7 +41,7 @@ import os
 
 def checkRequired():
     "Check for required executables"
-    required = [ 'udhcpd', 'udhcpc', 'dnsmasq', 'curl', 'firefox' ]
+    required = [ 'udhcpd', 'udhcpc', 'dnsmasq' ]
     for r in required:
         if not quietRun( 'which ' + r ):
             print '* Installing', r
@@ -121,7 +121,7 @@ def waitForIP( host ):
           host.cmd( 'grep nameserver /etc/resolv.conf' ) )
 
 def startDnsServer( host ):
-    "Start Fake DNS server"
+    "Start DNS server"
     info( '* Starting fake DNS server', host, 'at', host.IP(), '\n' )
     host.cmd( 'dnsmasq -k -A /#/%s 1>/tmp/dns.log 2>&1 &' %  host.IP() )
 
@@ -164,17 +164,20 @@ def dnsdemo( ):
     net.start()
 
     rootnode = connectToInternet( net, 's1' )
-
-    startDHCPserver( dns, gw=rootnode.IP(), dns='8.8.8.8')
-    #startDHCPclient( h1 )
+    #mountPrivateResolvconf( h1 )
+    startDHCPserver( dns, gw=rootnode.IP(), dns=dns.IP())
+    startDHCPclient( h1 )
     waitForIP( h1 )
 
-#    startDnsServer( dns )
+    startDnsServer( dns )
+    info( '* Fetching google.com:\n' )
+    #print h1.cmd( 'curl google.com' )
+    #print h1.cmd( 'ifconfig', h1.defaultIntf(), '0' )
 
     clientRequestToServer(h1)
 
     stopDnsServer( dns )
-
+    #unmountPrivateResolvconf( h1 )
     net.stop()
 
 def alterDnsClientToLocal(host):
@@ -185,7 +188,22 @@ def alterDnsClientToDefaul(host):
     info( '* Request NsLookup google.com:\n' )
     h1.cmd( "sed -i '/dns-nameservers 8.8.8.8 8.8.4.4/c\       dns-nameservers 10.0.0.50 10.0.0.50' /etc/network/interfaces")
 
+def mountPrivateResolvconf( host ):
+    "Create/mount private /etc/resolv.conf for host"
+    etc = '/tmp/etc-%s' % host
+    host.cmd( 'mkdir -p', etc )
+    host.cmd( 'mount --bind /etc', etc )
+    host.cmd( 'mount -n -t tmpfs tmpfs /etc' )
+    host.cmd( 'ln -s %s/* /etc/' % etc )
+    host.cmd( 'rm /etc/resolv.conf' )
+    host.cmd( 'cp %s/resolv.conf /etc/' % etc )
 
+def unmountPrivateResolvconf( host ):
+    "Unmount private /etc dir for host"
+    etc = '/tmp/etc-%s' % host
+    host.cmd( 'umount /etc' )
+    host.cmd( 'umount', etc )
+    host.cmd( 'rmdir', etc )
 
 def clientRequestToServer(h1):
     # Make sure we can fetch get request
@@ -197,9 +215,10 @@ def clientRequestToServer(h1):
         #print h1.cmd( 'wget http://10.0.0.56/index.html >& /tmp/index.html &' )
         #print h1.cmd( 'curl http://10.0.0.50' )
         print h1.cmd( 'nslookup google.com' )
+        #print h1.cmd( 'nslookup ufpe.com.br' )
         qt= qt + 1
 
-    info( '* End NslooingUp!:\n' )
+    info( '* End Nslooking Up!:\n' )
 def usage():
     "Print usage message"
     print "%s [ -h | -text ]"
