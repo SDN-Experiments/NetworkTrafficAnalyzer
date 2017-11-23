@@ -29,17 +29,12 @@ from mininet.util import quietRun
 from mininet.log import setLogLevel, info
 from mininet.term import makeTerms
 from mininet.node import Controller, RemoteController, OVSKernelSwitch, UserSwitch
-from pyftpdlib.authorizers import DummyAuthorizer
-from pyftpdlib.handlers import FTPHandler
-from pyftpdlib.servers import FTPServer
-from ftplib import FTP
-
-#from mininet.examples.nat import connectToInternet, stopNAT
-
 from sys import exit, stdin, argv
 from re import findall
 from time import sleep
 import os
+from ftplib import FTP
+
 
 def checkRequired():
     "Check for required executables"
@@ -67,26 +62,18 @@ class FtpTopo( Topo ):
 
 # ftp server
 
-server = None
 def startFTPServer( host ):
-    "Start evil ftp server"
+    "Start ftp server"
     info( '* Starting FTP server', host, 'at', host.IP(), '\n' )
+    print host.cmd('sudo python ./flow/ftp-server.py &')
 
-    authorizer = DummyAuthorizer()
-    authorizer.add_user("ubuntu", "ubuntu", "/home/ubuntu/ftp", perm="elradfmw")
-    authorizer.add_anonymous("/home/ubuntu/ftp", perm="elradfmw")
-
-    handler = FTPHandler
-    handler.authorizer = authorizer
-
-    server = FTPServer((host.IP(), 21), handler)
-    server.serve_forever()
 
 
 def stopFTPServer( host ):
     "Stop ftp server"
     info( '* Stopping ftp server', host, 'at', host.IP(), '\n' )
-    server.clo
+    #server.close_all()
+
 
 def readline():
     "Read a line from stdin"
@@ -120,9 +107,8 @@ def ftpdemo( ):
 
 
     net.start()
-    #verifyConnection(h1, ftp)
-    # And an ftp server
-    startFTPServer( ftp )
+
+    #startFTPServer( ftp )
 
     clientRequestToServer(h1,ftp)
 
@@ -132,26 +118,10 @@ def ftpdemo( ):
 def clientRequestToServer(client, server):
     # Make sure we can fetch get request
     info( '* Fetching file FTP server:\n' )
-    # ftp = FTP('')
-    # ftp.connect(server.IP(),21)
-    # ftp.login()
-    # ftp.cwd('directory_name') #replace with your directory
-    # ftp.retrlines('LIST')
-    # uploadFile()
-    print client.cmd('wget ftp://ubuntu:ubuntu@SERVERNAME/ftp/temp.ftp')
 
-def uploadFile():
-     filename = 'testfile.txt' #replace with your file in your home folder
-     ftp.storbinary('STOR '+filename, open(filename, 'rb'))
-     ftp.quit()
+    print client.cmd('wget ftp://ubuntu:ubuntu@' + server.IP() + '/temp.ftp')
+    #print client.cmd('curl ftp://' + server.IP() + '/temp.ftp --user ubuntu:ubuntu -o  temp.ftp')
 
-def downloadFile():
-     filename = 'testfile.txt' #replace with your file in the directory ('directory_name')
-     localfile = open(filename, 'wb')
-     ftp.retrbinary('RETR ' + filename, localfile.write, 21)
-     ftp.quit()
-     localfile.close()
-     info( '* End Fetching!:\n' )
 
 def usage():
     "Print usage message"
@@ -165,3 +135,4 @@ if __name__ == '__main__':
         exit( 1 )
     #firefox = '-t' not in argv
     ftpdemo()
+s
