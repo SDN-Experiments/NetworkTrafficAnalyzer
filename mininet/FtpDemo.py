@@ -66,6 +66,7 @@ def startFTPServer( host ):
     "Start ftp server"
     info( '* Starting FTP server', host, 'at', host.IP(), '\n' )
     print host.cmd('sudo python ./flow/ftp-server.py &')
+    #print host.cmd('sudo sftp -D ' + "'/home/ubuntu/ftp/temp.ftp'")
 
 
 
@@ -73,6 +74,17 @@ def stopFTPServer( host ):
     "Stop ftp server"
     info( '* Stopping ftp server', host, 'at', host.IP(), '\n' )
     #server.close_all()
+
+def clientRequestToServer(client, server):
+    # Make sure we can fetch get request
+    info( '* Fetching file FTP server:\n' )
+
+    #print client.cmd('wget ftp://ubuntu:ubuntu@' + server.IP() + '/temp.ftp')
+    # print client.cmd('curl ftp://' + server.IP() + '/ftp/temp.ftp --user ubuntu:ubuntu -o  temp.ftp')
+    # print client.cmd('curl ftp://' + server.IP() + '/ftp/temp.ftp --user ubuntu:ubuntu')
+    #print client.cmd('curl ftp://' + server.IP() + '/home/ubuntu/ftp/temp.ftp')
+    #print client.cmd(' curl --ftp-ssl --user ubuntu:ubuntu ftp://' + server.IP() + '/temp.ft')
+    print client.cmd('sudo python ./flow/ftp-client.py')
 
 
 def readline():
@@ -99,7 +111,8 @@ def ftpdemo( ):
     net = Mininet( topo=topo,
     controller=lambda name: RemoteController( name = 'c0', ip='192.168.56.104' ),
       link=TCLink,
-      switch=OVSKernelSwitch)
+      switch=OVSKernelSwitch,
+      autoSetMacs=True)
 
 
     h1, ftp, sw = net.get( 'h1', 'ftp' , 's1')
@@ -108,19 +121,13 @@ def ftpdemo( ):
 
     net.start()
 
-    #startFTPServer( ftp )
+    startFTPServer( ftp )
 
     clientRequestToServer(h1,ftp)
 
     stopFTPServer( ftp )
     net.stop()
 
-def clientRequestToServer(client, server):
-    # Make sure we can fetch get request
-    info( '* Fetching file FTP server:\n' )
-
-    print client.cmd('wget ftp://ubuntu:ubuntu@' + server.IP() + '/temp.ftp')
-    #print client.cmd('curl ftp://' + server.IP() + '/temp.ftp --user ubuntu:ubuntu -o  temp.ftp')
 
 
 def usage():
@@ -135,4 +142,3 @@ if __name__ == '__main__':
         exit( 1 )
     #firefox = '-t' not in argv
     ftpdemo()
-s
