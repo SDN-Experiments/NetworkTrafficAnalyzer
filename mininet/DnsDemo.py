@@ -121,7 +121,7 @@ def waitForIP( host ):
           host.cmd( 'grep nameserver /etc/resolv.conf' ) )
 
 def startDnsServer( host ):
-    "Start DNS server"
+    "Start Fake DNS server"
     info( '* Starting fake DNS server', host, 'at', host.IP(), '\n' )
     host.cmd( 'dnsmasq -k -A /#/%s 1>/tmp/dns.log 2>&1 &' %  host.IP() )
 
