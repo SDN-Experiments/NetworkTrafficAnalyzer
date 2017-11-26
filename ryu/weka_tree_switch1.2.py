@@ -263,38 +263,37 @@ class WekaTreeSwitch(app_manager.RyuApp):
         datapath.send_msg(out)
 
     def weka_decision_tree(self, srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo):
-        if codigo_protocolo <= 6:
-          if tamtotal_pacote_menor <= 54:
-              if dstporta <= 32931:
-                  if tamtotal_pacote_maior <= 755: 
-                  return "ftp" 
-                  elif tamtotal_pacote_maior > 755: 
-                  return ssl 
-              elif dstporta > 32931: 
-              return "ftp" 
-          elif tamtotal_pacote_menor > 54:
-              if dstporta <= 80: 
-              return "web" 
-              elif dstporta > 80:
-                  if srcporta <= 80: 
-                  return "web" 
-                  elif srcporta > 80:
-                      if dstporta <= 443: 
-                      return ssl 
-                      elif dstporta > 443:
-                          if srcporta <= 2632: 
-                          return ssl 
-                          elif srcporta > 2632: 
-                          return "p2p" 
-      elif codigo_protocolo > 6:
-          if dstporta <= 80: 
-          return "dns" 
-          elif dstporta > 80:
-              if tamtotal_pacote_maior <= 79: 
-              return "dns" 
-              elif tamtotal_pacote_maior > 79: 
-              return "quic" 
-
+             if codigo_protocolo <= 6:
+                if tamtotal_pacote_menor <= 54:
+                    if dstporta <= 32931:
+                        if tamtotal_pacote_maior <= 755: 
+                            return 'ftp' 
+                        elif tamtotal_pacote_maior > 755: 
+                            return ssl 
+                    elif dstporta > 32931: 
+                        return 'ftp' 
+                elif tamtotal_pacote_menor > 54:
+                    if dstporta <= 80: 
+                        return 'web' 
+                    elif dstporta > 80:
+                        if srcporta <= 80: 
+                            return 'web' 
+                        elif srcporta > 80:
+                            if dstporta <= 443: 
+                                return ssl 
+                            elif dstporta > 443:
+                                if srcporta <= 2632: 
+                                    return ssl 
+                                elif srcporta > 2632: 
+                                    return 'p2p' 
+            elif codigo_protocolo > 6:
+                if dstporta <= 80: 
+                    return 'dns' 
+                elif dstporta > 80:
+                    if tamtotal_pacote_maior <= 79: 
+                        return 'dns' 
+                    elif tamtotal_pacote_maior > 79: 
+                        return 'quic'
     def printInstanceH2H(self):
         for key in self.host2host_instance:
             self.logger.debug("*** Info  Accumalate h2h : (%s) ", key)
