@@ -10,7 +10,7 @@ public class Wekaoutput {
 
     public static void main(String[] args) {
 
-        File arquivo = new File("arvoreweka1.2.1.txt");
+        File arquivo = new File("arvoreJ48weka_cincoclasses.txt");
         try (InputStream in = new FileInputStream(arquivo)) {
             Scanner scan = new Scanner(in);
             int index_barra_anterior = -1;
@@ -36,34 +36,34 @@ public class Wekaoutput {
 
                 if (start_index_p2p > -1) {
                     int end_index_p2p = start_index_p2p + 3;
-                    temp.replace(start_index_p2p, end_index_p2p, "\"p2p\"");
+                    temp.replace(start_index_p2p, end_index_p2p, "\'p2p\'");
                 }
                 
                 int start_index_ssl = temp.indexOf("ssl");
 
                 if (start_index_ssl > -1) {
                     int end_index_ssl = start_index_ssl + 3;
-                    temp.replace(start_index_ssl, end_index_ssl, "\"ssl\"");
+                    temp.replace(start_index_ssl, end_index_ssl, "\'ssl\'");
                 }
                 int start_index_www = temp.indexOf("web");
 
                 if (start_index_www > -1) {
                     int end_index_www = start_index_www + 3;
-                    temp.replace(start_index_www, end_index_www, "\"web\"");
+                    temp.replace(start_index_www, end_index_www, "\'web\'");
                 }
 
                 int start_index_ftp = temp.indexOf("ftp");
 
                 if (start_index_ftp > -1) {
                     int end_index_ftp = start_index_ftp + 3;
-                    temp.replace(start_index_ftp, end_index_ftp, "\"ftp\"");
+                    temp.replace(start_index_ftp, end_index_ftp, "\'ftp\'");
                 }
 
                 int start_index_dns = temp.indexOf("dns");
 
                 if (start_index_dns > -1) {
                     int end_index_dns = start_index_dns + 3;
-                    temp.replace(start_index_dns, end_index_dns, "\"dns\"");
+                    temp.replace(start_index_dns, end_index_dns, "\'dns\'");
                 }
 
                 boolean greater = temp.indexOf(">") > -1 ? true : false;
