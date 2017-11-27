@@ -1,0 +1,20 @@
+codigo_protocolo <= 6
+|   tamtotal_pacote_menor <= 54
+|   |   dstporta <= 32931
+|   |   |   tamtotal_pacote_maior <= 755: ftp (12.0)
+|   |   |   tamtotal_pacote_maior > 755: ssl (3.0/1.0)
+|   |   dstporta > 32931: ftp (876.0)
+|   tamtotal_pacote_menor > 54
+|   |   dstporta <= 80: web (827.0/1.0)
+|   |   dstporta > 80
+|   |   |   srcporta <= 80: web (310.0/1.0)
+|   |   |   srcporta > 80
+|   |   |   |   dstporta <= 443: ssl (716.0/4.0)
+|   |   |   |   dstporta > 443
+|   |   |   |   |   srcporta <= 2632: ssl (426.0/11.0)
+|   |   |   |   |   srcporta > 2632: p2p (1050.0/2.0)
+codigo_protocolo > 6
+|   dstporta <= 80: dns (959.0)
+|   dstporta > 80
+|   |   tamtotal_pacote_maior <= 79: dns (39.0)
+|   |   tamtotal_pacote_maior > 79: quic (1202.0/2.0)
