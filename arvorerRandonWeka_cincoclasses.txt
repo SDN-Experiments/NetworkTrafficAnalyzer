@@ -1,0 +1,88 @@
+tamtotal_pacote_menor < 66.5
+|   dstporta < 261.5
+|   |   dstporta < 50.5 : ftp (11/0)
+|   |   dstporta >= 50.5
+|   |   |   com_med_cabecalhoIP < 54.05 : ssl (1/0)
+|   |   |   com_med_cabecalhoIP >= 54.05 : web (827/0)
+|   dstporta >= 261.5
+|   |   srcporta < 4464.5
+|   |   |   srcporta < 261.5
+|   |   |   |   tamtotal_pacote_menor < 57 : ftp (5/0)
+|   |   |   |   tamtotal_pacote_menor >= 57
+|   |   |   |   |   tamtotal_med_pacote < 65.96 : p2p (1/0)
+|   |   |   |   |   tamtotal_med_pacote >= 65.96 : web (309/0)
+|   |   |   srcporta >= 261.5
+|   |   |   |   com_med_cabecalhoIP < 55.13
+|   |   |   |   |   tamtotal_med_pacote < 763.15
+|   |   |   |   |   |   tamtotal_med_pacote < 547.05
+|   |   |   |   |   |   |   desv_padrao_tamtotal < 442.56
+|   |   |   |   |   |   |   |   variancia_tamtotal < 190932.37
+|   |   |   |   |   |   |   |   |   desv_padrao_tamtotal < 386.34
+|   |   |   |   |   |   |   |   |   |   variancia_tamtotal < 146985.06
+|   |   |   |   |   |   |   |   |   |   |   desv_padrao_tamtotal < 334.67 : ssl (7/0)
+|   |   |   |   |   |   |   |   |   |   |   desv_padrao_tamtotal >= 334.67
+|   |   |   |   |   |   |   |   |   |   |   |   tamtotal_med_pacote < 214.85 : web (1/0)
+|   |   |   |   |   |   |   |   |   |   |   |   tamtotal_med_pacote >= 214.85 : ssl (5/0)
+|   |   |   |   |   |   |   |   |   |   variancia_tamtotal >= 146985.06 : web (1/0)
+|   |   |   |   |   |   |   |   |   desv_padrao_tamtotal >= 386.34 : ssl (11/0)
+|   |   |   |   |   |   |   |   variancia_tamtotal >= 190932.37 : web (1/0)
+|   |   |   |   |   |   |   desv_padrao_tamtotal >= 442.56 : ssl (29/0)
+|   |   |   |   |   |   tamtotal_med_pacote >= 547.05
+|   |   |   |   |   |   |   tamtotal_med_pacote < 734.51
+|   |   |   |   |   |   |   |   tamtotal_med_pacote < 550.85 : web (1/0)
+|   |   |   |   |   |   |   |   tamtotal_med_pacote >= 550.85
+|   |   |   |   |   |   |   |   |   desv_padrao_tamtotal < 684.09
+|   |   |   |   |   |   |   |   |   |   variancia_tamtotal < 455493.43
+|   |   |   |   |   |   |   |   |   |   |   dstporta < 57621.5
+|   |   |   |   |   |   |   |   |   |   |   |   tamtotal_med_pacote < 665.67 : ssl (6/0)
+|   |   |   |   |   |   |   |   |   |   |   |   tamtotal_med_pacote >= 665.67 : web (1/0)
+|   |   |   |   |   |   |   |   |   |   |   dstporta >= 57621.5 : web (1/0)
+|   |   |   |   |   |   |   |   |   |   variancia_tamtotal >= 455493.43 : web (2/0)
+|   |   |   |   |   |   |   |   |   desv_padrao_tamtotal >= 684.09 : ssl (6/0)
+|   |   |   |   |   |   |   tamtotal_med_pacote >= 734.51 : web (2/0)
+|   |   |   |   |   tamtotal_med_pacote >= 763.15 : ssl (17/0)
+|   |   |   |   com_med_cabecalhoIP >= 55.13
+|   |   |   |   |   com_med_cabecalhoIP < 64.29
+|   |   |   |   |   |   variancia_tamtotal < 518557.11 : ssl (266/0)
+|   |   |   |   |   |   variancia_tamtotal >= 518557.11 : web (1/0)
+|   |   |   |   |   com_med_cabecalhoIP >= 64.29 : ssl (280/0)
+|   |   srcporta >= 4464.5
+|   |   |   tamtotal_pacote_menor < 57
+|   |   |   |   dstporta < 16682 : ssl (2/0)
+|   |   |   |   dstporta >= 16682 : ftp (872/0)
+|   |   |   tamtotal_pacote_menor >= 57
+|   |   |   |   tamtotal_pacote_maior < 1510
+|   |   |   |   |   dstporta < 6118
+|   |   |   |   |   |   codigo_protocolo < 11.5
+|   |   |   |   |   |   |   tamtotal_med_pacote < 282.02
+|   |   |   |   |   |   |   |   variancia_tamtotal < 205.22
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote < 67.1 : ssl (8/0)
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote >= 67.1 : p2p (1/0)
+|   |   |   |   |   |   |   |   variancia_tamtotal >= 205.22 : ssl (159/0)
+|   |   |   |   |   |   |   tamtotal_med_pacote >= 282.02
+|   |   |   |   |   |   |   |   tamtotal_pacote_maior < 1457.5 : ssl (2/0)
+|   |   |   |   |   |   |   |   tamtotal_pacote_maior >= 1457.5 : web (1/0)
+|   |   |   |   |   |   codigo_protocolo >= 11.5 : dns (22/0)
+|   |   |   |   |   dstporta >= 6118
+|   |   |   |   |   |   variancia_tamtotal < 116.82 : ftp (2/0)
+|   |   |   |   |   |   variancia_tamtotal >= 116.82 : p2p (1015/0)
+|   |   |   |   tamtotal_pacote_maior >= 1510
+|   |   |   |   |   desv_padrao_tamtotal < 661.66
+|   |   |   |   |   |   tamtotal_pacote_menor < 63
+|   |   |   |   |   |   |   dstporta < 16461
+|   |   |   |   |   |   |   |   tamtotal_med_pacote < 447.59 : ssl (105/0)
+|   |   |   |   |   |   |   |   tamtotal_med_pacote >= 447.59
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote < 470.97 : web (1/0)
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote >= 470.97
+|   |   |   |   |   |   |   |   |   |   desv_padrao_tamtotal < 606.54 : web (1/0)
+|   |   |   |   |   |   |   |   |   |   desv_padrao_tamtotal >= 606.54 : ssl (4/0)
+|   |   |   |   |   |   |   dstporta >= 16461 : p2p (8/0)
+|   |   |   |   |   |   tamtotal_pacote_menor >= 63 : ssl (212/0)
+|   |   |   |   |   desv_padrao_tamtotal >= 661.66
+|   |   |   |   |   |   dstporta < 24911 : ssl (7/0)
+|   |   |   |   |   |   dstporta >= 24911 : p2p (25/0)
+tamtotal_pacote_menor >= 66.5
+|   dstporta < 248 : dns (959/0)
+|   dstporta >= 248
+|   |   tamtotal_pacote_menor < 95 : dns (19/0)
+|   |   tamtotal_pacote_menor >= 95 : ssl (3/0)
