@@ -2,11 +2,11 @@
 
 @ATTRIBUTE tamtotal_med_pacote			NUMERIC
 @ATTRIBUTE desv_padrao_tamtotal			NUMERIC
-@ATTRIBUTE variancia_tamtotal			NUMERIC
+@ATTRIBUTE variancia_tamtotal			  NUMERIC
 @ATTRIBUTE tamtotal_pacote_maior		NUMERIC
 @ATTRIBUTE tamtotal_pacote_menor		NUMERIC
 @ATTRIBUTE com_med_cabecalhoIP			NUMERIC
-@ATTRIBUTE codigo_protocolo				NUMERIC
+@ATTRIBUTE codigo_protocolo				  NUMERIC
 @ATTRIBUTE srcporta						NUMERIC
 @ATTRIBUTE dstporta						NUMERIC
 @ATTRIBUTE class 						{web,p2p,dns,ftp}
