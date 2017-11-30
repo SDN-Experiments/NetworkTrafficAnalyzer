@@ -93,8 +93,10 @@ def qosdemo( ):
     print h3.cmd('iperf -c 10.0.0.4 -p 6000')
 
 
-    prompt( "*** Execute script to enable QOS and press enter: " )
-
+    #prompt( "*** Execute script to enable QOS and press enter: " )
+    print ryu.cmd('cd qos-command')
+    print ryu.cmd('sudo ./ovs-qos-run')
+    #h4.cmd('iperf -s -p 6000 &')
     h4.cmd('iperf -s -p 4000 &')
     print h1.cmd('iperf -c 10.0.0.4 -p 4000')
     #

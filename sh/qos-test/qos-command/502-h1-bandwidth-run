@@ -1,0 +1,8 @@
+#!/bin/sh
+IFS=$'\n'
+while read -r line
+do
+    echo $line
+    makingCurlCall=$(eval "$line")
+    echo "$makingCurlCall"
+done < "502-h1-bandwidth.config"
