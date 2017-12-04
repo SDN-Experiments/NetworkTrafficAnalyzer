@@ -23,10 +23,10 @@ from twisted.internet import threads
 
 class DataLock:
     def __init__(self):
-        if sys.platform == 'linux2 (*)':
+        if sys.platform == 'win32':
             from qt import QMutex
             self.mutex = QMutex(True)
-        elif sys.platform == 'darwin':
+        elif sys.platform == 'linux2 (*)':
             from Foundation import NSRecursiveLock
             self.mutex = NSRecursiveLock.alloc().init()
     def lock(self): self.mutex.lock()
@@ -34,16 +34,16 @@ class DataLock:
 
 def downloadDir():
     ddir=None
-    if sys.platform=='linux2 (*)':
+    if sys.platform=='win32':
         ddir = os.environ.get('HOMEPATH')
         if ddir and len(ddir)>0:
-            ddir = '%s%sMy Documents%sTorrentServer' % (ddir,os.sep,os.sep)
+            ddir = '%s%sMy home%sTorrentServer' % (ddir,os.sep,os.sep)
             if not os.path.isdir(ddir): os.makedirs(ddir)
         else: ddir='.'
     else:
         ddir = os.environ.get('HOME')
         try:
-            ddir += '/Documents/TorrentServer'
+            ddir += '/home/TorrentServer'
             if not os.path.isdir(ddir): os.makedirs(ddir)
         except: ddir = os.environ.get('HOME')
     return ddir
