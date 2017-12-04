@@ -317,7 +317,8 @@ class WekaTreeSwitch(app_manager.RyuApp):
                                             if tamtotal_med_pacote <= 727.05882: return 'ftp' 
                                             elif tamtotal_med_pacote > 727.05882: return 'p2p' 
                                     elif desv_padrao_tamtotal > 717.06683: return 'ftp' 
-                                elif tamtotal_med_pacote > 904.12108: return 'ftp'
+                                elif tamtotal_med_pacote > 904.12108: return 'ftp' 
+        elif codigo_protocolo > 6: return 'dns' 
     def printInstanceH2H(self):
         for key in self.host2host_instance:
             self.logger.debug("*** Info  Accumalate h2h : (%s) ", key)
