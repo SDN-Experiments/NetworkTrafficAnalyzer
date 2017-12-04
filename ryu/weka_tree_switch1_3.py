@@ -263,94 +263,61 @@ class WekaTreeSwitch(app_manager.RyuApp):
         datapath.send_msg(out)
 # def weka_decision_tree(self, srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo):
     def weka_decision_tree(self, tamtotal_med_pacote, desv_padrao_tamtotal, variancia_tamtotal, tamtotal_pacote_maior, tamtotal_pacote_menor, com_med_cabecalhoIP, codigo_protocolo, srcporta, dstporta):
-        if tamtotal_pacote_menor < 66.5:
-            if dstporta < 261.5:
-                if dstporta < 50.5 : return 'ftp' 
-                elif dstporta >= 50.5:
-                    if com_med_cabecalhoIP < 54.05 : return 'ssl' 
-                    elif com_med_cabecalhoIP >= 54.05 : return 'web' 
-            elif dstporta >= 261.5:
-                if srcporta < 4464.5:
-                    if srcporta < 261.5:
-                        if tamtotal_pacote_menor < 57 : return 'ftp' 
-                        elif tamtotal_pacote_menor >= 57:
-                            if tamtotal_med_pacote < 65.96 : return 'p2p' 
-                            elif tamtotal_med_pacote >= 65.96 : return 'web' 
-                    elif srcporta >= 261.5:
-                        if com_med_cabecalhoIP < 55.13:
-                            if tamtotal_med_pacote < 763.15:
-                                if tamtotal_med_pacote < 547.05:
-                                    if desv_padrao_tamtotal < 442.56:
-                                        if variancia_tamtotal < 190932.37:
-                                            if desv_padrao_tamtotal < 386.34:
-                                                if variancia_tamtotal < 146985.06:
-                                                    if desv_padrao_tamtotal < 334.67 : return 'ssl' 
-                                                    elif desv_padrao_tamtotal >= 334.67:
-                                                        if tamtotal_med_pacote < 214.85 : return 'web' 
-                                                        elif tamtotal_med_pacote >= 214.85 : return 'ssl' 
-                                                elif variancia_tamtotal >= 146985.06 : return 'web' 
-                                            elif desv_padrao_tamtotal >= 386.34 : return 'ssl' 
-                                        elif variancia_tamtotal >= 190932.37 : return 'web' 
-                                    elif desv_padrao_tamtotal >= 442.56 : return 'ssl' 
-                                elif tamtotal_med_pacote >= 547.05:
-                                    if tamtotal_med_pacote < 734.51:
-                                        if tamtotal_med_pacote < 550.85 : return 'web' 
-                                        elif tamtotal_med_pacote >= 550.85:
-                                            if desv_padrao_tamtotal < 684.09:
-                                                if variancia_tamtotal < 455493.43:
-                                                    if dstporta < 57621.5:
-                                                        if tamtotal_med_pacote < 665.67 : return 'ssl' 
-                                                        elif tamtotal_med_pacote >= 665.67 : return 'web' 
-                                                    elif dstporta >= 57621.5 : return 'web' 
-                                                elif variancia_tamtotal >= 455493.43 : return 'web' 
-                                            elif desv_padrao_tamtotal >= 684.09 : return 'ssl' 
-                                    elif tamtotal_med_pacote >= 734.51 : return 'web' 
-                            elif tamtotal_med_pacote >= 763.15 : return 'ssl' 
-                        elif com_med_cabecalhoIP >= 55.13:
-                            if com_med_cabecalhoIP < 64.29:
-                                if variancia_tamtotal < 518557.11 : return 'ssl' 
-                                elif variancia_tamtotal >= 518557.11 : return 'web' 
-                            elif com_med_cabecalhoIP >= 64.29 : return 'ssl' 
-                elif srcporta >= 4464.5:
-                    if tamtotal_pacote_menor < 57:
-                        if dstporta < 16682 : return 'ssl' 
-                        elif dstporta >= 16682 : return 'ftp' 
-                    elif tamtotal_pacote_menor >= 57:
-                        if tamtotal_pacote_maior < 1510:
-                            if dstporta < 6118:
-                                if codigo_protocolo < 11.5:
-                                    if tamtotal_med_pacote < 282.02:
-                                        if variancia_tamtotal < 205.22:
-                                            if tamtotal_med_pacote < 67.1 : return 'ssl' 
-                                            elif tamtotal_med_pacote >= 67.1 : return 'p2p' 
-                                        elif variancia_tamtotal >= 205.22 : return 'ssl' 
-                                    elif tamtotal_med_pacote >= 282.02:
-                                        if tamtotal_pacote_maior < 1457.5 : return 'ssl' 
-                                        elif tamtotal_pacote_maior >= 1457.5 : return 'web' 
-                                elif codigo_protocolo >= 11.5 : return 'dns' 
-                            elif dstporta >= 6118:
-                                if variancia_tamtotal < 116.82 : return 'ftp' 
-                                elif variancia_tamtotal >= 116.82 : return 'p2p' 
-                        elif tamtotal_pacote_maior >= 1510:
-                            if desv_padrao_tamtotal < 661.66:
-                                if tamtotal_pacote_menor < 63:
-                                    if dstporta < 16461:
-                                        if tamtotal_med_pacote < 447.59 : return 'ssl' 
-                                        elif tamtotal_med_pacote >= 447.59:
-                                            if tamtotal_med_pacote < 470.97 : return 'web' 
-                                            elif tamtotal_med_pacote >= 470.97:
-                                                if desv_padrao_tamtotal < 606.54 : return 'web' 
-                                                elif desv_padrao_tamtotal >= 606.54 : return 'ssl' 
-                                    elif dstporta >= 16461 : return 'p2p' 
-                                elif tamtotal_pacote_menor >= 63 : return 'ssl' 
-                            elif desv_padrao_tamtotal >= 661.66:
-                                if dstporta < 24911 : return 'ssl' 
-                                elif dstporta >= 24911 : return 'p2p' 
-        elif tamtotal_pacote_menor >= 66.5:
-            if dstporta < 248 : return 'dns' 
-            elif dstporta >= 248:
-                if tamtotal_pacote_menor < 95 : return 'dns' 
-                elif tamtotal_pacote_menor >= 95 : return 'ssl' 
+        if codigo_protocolo <= 6:
+            if dstporta <= 80:
+                if com_med_cabecalhoIP <= 54.53933:
+                    if dstporta <= 21: return 'ftp' 
+                    elif dstporta > 21: return 'web' 
+                elif com_med_cabecalhoIP > 54.53933:
+                    if tamtotal_pacote_maior <= 181:
+                        if tamtotal_pacote_maior <= 130: return 'ftp' 
+                        elif tamtotal_pacote_maior > 130: return 'web' 
+                    elif tamtotal_pacote_maior > 181: return 'web' 
+            elif dstporta > 80:
+                if srcporta <= 4410:
+                    if srcporta <= 80:
+                        if tamtotal_med_pacote <= 82.5:
+                            if srcporta <= 21: return 'ftp' 
+                            elif srcporta > 21: return 'web' 
+                        elif tamtotal_med_pacote > 82.5: return 'web' 
+                    elif srcporta > 80:
+                        if com_med_cabecalhoIP <= 55.125:
+                            if dstporta <= 57704: return 'ssl' 
+                            elif dstporta > 57704: return 'web' 
+                        elif com_med_cabecalhoIP > 55.125: return 'ssl' 
+                elif srcporta > 4410:
+                    if dstporta <= 443: return 'ssl' 
+                    elif dstporta > 443:
+                        if tamtotal_pacote_maior <= 1492:
+                            if tamtotal_pacote_maior <= 201:
+                                if desv_padrao_tamtotal <= 17.6225:
+                                    if tamtotal_pacote_maior <= 88: return 'ftp' 
+                                    elif tamtotal_pacote_maior > 88: return 'p2p' 
+                                elif desv_padrao_tamtotal > 17.6225: return 'p2p' 
+                            elif tamtotal_pacote_maior > 201:
+                                if tamtotal_pacote_maior <= 253: return 'ftp' 
+                                elif tamtotal_pacote_maior > 253:
+                                    if com_med_cabecalhoIP <= 56.95652: return 'p2p' 
+                                    elif com_med_cabecalhoIP > 56.95652:
+                                        if com_med_cabecalhoIP <= 57:
+                                            if srcporta <= 50956: return 'ftp' 
+                                            elif srcporta > 50956: return 'p2p' 
+                                        elif com_med_cabecalhoIP > 57:
+                                            if tamtotal_pacote_maior <= 458: return 'ftp' 
+                                            elif tamtotal_pacote_maior > 458: return 'p2p' 
+                        elif tamtotal_pacote_maior > 1492:
+                            if srcporta <= 46800:
+                                if desv_padrao_tamtotal <= 723.68256: return 'p2p' 
+                                elif desv_padrao_tamtotal > 723.68256: return 'ftp' 
+                            elif srcporta > 46800:
+                                if tamtotal_med_pacote <= 904.12108:
+                                    if desv_padrao_tamtotal <= 717.06683:
+                                        if com_med_cabecalhoIP <= 54.90909: return 'p2p' 
+                                        elif com_med_cabecalhoIP > 54.90909:
+                                            if tamtotal_med_pacote <= 727.05882: return 'ftp' 
+                                            elif tamtotal_med_pacote > 727.05882: return 'p2p' 
+                                    elif desv_padrao_tamtotal > 717.06683: return 'ftp' 
+                                elif tamtotal_med_pacote > 904.12108: return 'ftp'
     def printInstanceH2H(self):
         for key in self.host2host_instance:
             self.logger.debug("*** Info  Accumalate h2h : (%s) ", key)
