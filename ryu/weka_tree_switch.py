@@ -24,12 +24,12 @@ from ryu.lib.packet import ether_types
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import tcp
 from ryu.lib.packet import udp
+
 #from ryu.custom.host2host import host2host
 import sys
 
 import math
 import sys
-
 
 TCP_SYN = 0x002
 
@@ -102,6 +102,7 @@ class WekaTreeSwitch(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
+
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -129,7 +130,6 @@ class WekaTreeSwitch(app_manager.RyuApp):
             udp_temp = pkt.get_protocol(udp.udp)
             #Clinte-To-Server
             self.logger.debug("*** Desencaplusando... ")
-            #self.logger.debug("(PKT):  %s ", pkt)
             # Tamanho Payloada
             payload = sys.getsizeof(pkt.data)
             self.logger.debug("(PKT) Tamanho Payload Pacote :  %s ", payload)
@@ -142,6 +142,8 @@ class WekaTreeSwitch(app_manager.RyuApp):
             self.logger.debug("============== /// ==============")
             self.logger.debug("(TCP):  %s ", tcp_temp)
             self.logger.debug("(UDP):  %s ", udp_temp)
+
+            header_length_bytes = (ipv4_temp.header_length * 32)/8
 
             #Web
             if tcp_temp != None and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]) and ipv4_temp.proto == 6:
@@ -161,14 +163,14 @@ class WekaTreeSwitch(app_manager.RyuApp):
                 if len(self.host2host_instance) > 0:
                     if  key in self.host2host_instance:
                         h2h = self.host2host_instance[key]
-                        h2h.updateStateHostToHostByPacket(payload)
+                        h2h.updateStateHostToHostByPacket(ipv4_temp.total_length,header_length_bytes)
                     else:
                         #self.host2host_instance.setdefault(src + dst, {})
-                        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,6 )
                         self.host2host_instance[key] = h2h
                 else:
                     #self.host2host_instance.setdefault(src + dst, {})
-                    h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                    h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,6 )
                     self.host2host_instance[key] = h2h
 
 
@@ -186,7 +188,6 @@ class WekaTreeSwitch(app_manager.RyuApp):
 
                 self.logger.debug("(Class):  %s", fluxo_classe)
 
-
             if udp_temp != None and ipv4_temp.proto == UDP_CODE:
                 self.logger.debug("*** Info  Extracting Attributes (UDP) Choosen... ")
                 self.logger.debug("(UDP) porta Origem:  %s ", udp_temp.src_port)
@@ -202,14 +203,14 @@ class WekaTreeSwitch(app_manager.RyuApp):
                 if len(self.host2host_instance) > 0:
                     if  key in self.host2host_instance:
                         h2h = self.host2host_instance[key]
-                        h2h.updateStateHostToHostByPacket(payload)
+                        h2h.updateStateHostToHostByPacket(ipv4_temp.total_length,header_length_bytes)
                     else:
                         #self.host2host_instance.setdefault(src + dst, {})
-                        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,UDP_CODE )
                         self.host2host_instance[key] = h2h
                 else:
                     #self.host2host_instance.setdefault(src + dst, {})
-                    h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                    h2h = host2host(udp_temp.src_port, udp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,UDP_CODE )
                     self.host2host_instance[key] = h2h
 
 
@@ -289,6 +290,7 @@ class WekaTreeSwitch(app_manager.RyuApp):
         elif codigo_protocolo > 6:
             return 'dns'
 
+
     def printInstanceH2H(self):
         for key in self.host2host_instance:
             self.logger.debug("*** Info  Accumalate h2h : (%s) ", key)
@@ -319,6 +321,9 @@ class host2host(object):
     std_dev_packet_size = 0
     var_packet_size = 0.0
 
+    sum_length_header = 0
+    length_header_average = 0.0
+
     sum_size_packet = 0
     qt_packets = 0
     values_size_packet = []
@@ -346,21 +351,25 @@ class host2host(object):
         self.qt_packets += 1
         self.values_size_packet.append(self.size_packet)
         self.sum_size_packet += self.size_packet
+        self.sum_length_header += self.length_header_IP
         self.checkGreaterBytesPacket(self.size_packet)
         self.checkSmallerBytesPacket(self.size_packet)
         self.computeAverage()
         self.computeVariance()
+        self.computeAverageHeaderLength()
         self.computeStandardDeviation()
 
 
-    def updateStateHostToHostByPacket(self, size_packet):
+    def updateStateHostToHostByPacket(self, size_packet,length_header_IP):
         self.qt_packets += 1
         self.values_size_packet.append(size_packet)
         self.sum_size_packet += size_packet
+        self.sum_length_header += length_header_IP
         self.checkGreaterBytesPacket(size_packet)
         self.checkSmallerBytesPacket(size_packet)
         self.computeAverage()
         self.computeVariance()
+        self.computeAverageHeaderLength()
         self.computeStandardDeviation()
 
     def checkSmallerBytesPacket(self, bytesPacket):
@@ -373,6 +382,9 @@ class host2host(object):
 
     def computeAverage(self):
         self.median_packet_size = self.sum_size_packet / self.qt_packets
+
+    def computeAverageHeaderLength(self):
+        self.length_header_average = self.sum_length_header / self.qt_packets
 
     def computeStandardDeviation(self):
         self.std_dev_packet_size = math.sqrt(self.var_packet_size)
@@ -387,6 +399,6 @@ class host2host(object):
 
     def equals(self, o):
         if self.src_port == o.src_port and self.src_port == o.dst_port:
-            self.updateStateHostToHostByPacket(o.size_packet)
+            self.updateStateHostToHostByPacket(o.size_packet,o.length_header_IP)
             return True
         return False
