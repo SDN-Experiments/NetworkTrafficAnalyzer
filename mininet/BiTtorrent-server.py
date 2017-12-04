@@ -23,7 +23,7 @@ from twisted.internet import threads
 
 class DataLock:
     def __init__(self):
-        if sys.platform == 'win32':
+        if sys.platform == 'linux2 (*)':
             from qt import QMutex
             self.mutex = QMutex(True)
         elif sys.platform == 'darwin':
@@ -34,7 +34,7 @@ class DataLock:
 
 def downloadDir():
     ddir=None
-    if sys.platform=='win32':
+    if sys.platform=='linux2 (*)':
         ddir = os.environ.get('HOMEPATH')
         if ddir and len(ddir)>0:
             ddir = '%s%sMy Documents%sTorrentServer' % (ddir,os.sep,os.sep)
