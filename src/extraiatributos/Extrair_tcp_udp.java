@@ -42,7 +42,6 @@ public class Extrair_tcp_udp {
 
         SummaryStatistics tamtotal_pacote = new SummaryStatistics();
         SummaryStatistics comp_cabecalhoip = new SummaryStatistics();
-        SummaryStatistics comp_cabecalho_protocolo = new SummaryStatistics();
         
         Frequency codigo_protocolo = new Frequency();
 
@@ -65,14 +64,13 @@ public class Extrair_tcp_udp {
             //IPPacket, aqui ficam os atributos que sao comum ao TCP e UDP
             if (packet instanceof IPPacket) {
                 IPPacket pacote = (IPPacket) packet;
-
-                tamtotal_pacote.addValue(pacote.len); // tamanho total ou comprimento do pacote, cabeçalho + dados, pode ter tamanho mínimo é de vinte bytes e o máximo é 64 Kb                                
+                
+                tamtotal_pacote.addValue(pacote.length); // tamanho total ou comprimento do pacote, cabeçalho + dados, pode ter tamanho mínimo é de vinte bytes e o máximo é 64 Kb                                
 
                 codigo_protocolo.addValue(((IPPacket) pacote).protocol); // Indica o protocolo (presente no campo de dados) que pediu o envio do datagrama, através de um código numérico, exemplos: - 01 ICMP  - 06 TCP - 17 UDP
                 
                 comp_cabecalhoip.addValue(pacote.header.length); //comprimento do cabecalho (sem dados), na teoria, pode ter no maximo 60 bytes
                 
-                comp_cabecalho_protocolo.addValue(pacote.length-20);
             }
             if (packet instanceof TCPPacket) {
                 TCPPacket pacote_tcp = (TCPPacket) packet;
