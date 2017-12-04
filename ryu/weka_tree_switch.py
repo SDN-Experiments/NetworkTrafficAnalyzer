@@ -24,7 +24,7 @@ from ryu.lib.packet import ether_types
 from ryu.lib.packet import ipv4
 from ryu.lib.packet import tcp
 from ryu.lib.packet import udp
-
+from ryu.lib import pcaplib
 #from ryu.custom.host2host import host2host
 import sys
 
@@ -45,6 +45,7 @@ class WekaTreeSwitch(app_manager.RyuApp):
         super(WekaTreeSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.host2host_instance = {}
+        #self.pcap_writer = pcaplib.Writer(open('my_pcap.pcap', 'wb'))
 
 
 
@@ -121,7 +122,7 @@ class WekaTreeSwitch(app_manager.RyuApp):
 
         dst = eth.dst
         src = eth.src
-
+        #self.pcap_writer.write_pkt(ev.msg.data)
         #Tamanho Janela TCP
         if eth.ethertype == ether_types.ETH_TYPE_IP:
             ipv4_temp = pkt.get_protocol(ipv4.ipv4)
