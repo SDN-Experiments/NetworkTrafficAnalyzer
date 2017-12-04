@@ -1,0 +1,56 @@
+if codigo_protocolo <= 6:
+    if dstporta <= 80:
+        if com_med_cabecalhoIP <= 54.53933:
+            if dstporta <= 21: return 'ftp' 
+            elif dstporta > 21: return 'web' 
+        elif com_med_cabecalhoIP > 54.53933:
+            if tamtotal_pacote_maior <= 181:
+                if tamtotal_pacote_maior <= 130: return 'ftp' 
+                elif tamtotal_pacote_maior > 130: return 'web' 
+            elif tamtotal_pacote_maior > 181: return 'web' 
+    elif dstporta > 80:
+        if srcporta <= 4410:
+            if srcporta <= 80:
+                if tamtotal_med_pacote <= 82.5:
+                    if srcporta <= 21: return 'ftp' 
+                    elif srcporta > 21: return 'web' 
+                elif tamtotal_med_pacote > 82.5: return 'web' 
+            elif srcporta > 80:
+                if com_med_cabecalhoIP <= 55.125:
+                    if dstporta <= 57704: return 'ssl' 
+                    elif dstporta > 57704: return 'web' 
+                elif com_med_cabecalhoIP > 55.125: return 'ssl' 
+        elif srcporta > 4410:
+            if dstporta <= 443: return 'ssl' 
+            elif dstporta > 443:
+                if tamtotal_pacote_maior <= 1492:
+                    if tamtotal_pacote_maior <= 201:
+                        if desv_padrao_tamtotal <= 17.6225:
+                            if tamtotal_pacote_maior <= 88: return 'ftp' 
+                            elif tamtotal_pacote_maior > 88: return 'p2p' 
+                        elif desv_padrao_tamtotal > 17.6225: return 'p2p' 
+                    elif tamtotal_pacote_maior > 201:
+                        if tamtotal_pacote_maior <= 253: return 'ftp' 
+                        elif tamtotal_pacote_maior > 253:
+                            if com_med_cabecalhoIP <= 56.95652: return 'p2p' 
+                            elif com_med_cabecalhoIP > 56.95652:
+                                if com_med_cabecalhoIP <= 57:
+                                    if srcporta <= 50956: return 'ftp' 
+                                    elif srcporta > 50956: return 'p2p' 
+                                elif com_med_cabecalhoIP > 57:
+                                    if tamtotal_pacote_maior <= 458: return 'ftp' 
+                                    elif tamtotal_pacote_maior > 458: return 'p2p' 
+                elif tamtotal_pacote_maior > 1492:
+                    if srcporta <= 46800:
+                        if desv_padrao_tamtotal <= 723.68256: return 'p2p' 
+                        elif desv_padrao_tamtotal > 723.68256: return 'ftp' 
+                    elif srcporta > 46800:
+                        if tamtotal_med_pacote <= 904.12108:
+                            if desv_padrao_tamtotal <= 717.06683:
+                                if com_med_cabecalhoIP <= 54.90909: return 'p2p' 
+                                elif com_med_cabecalhoIP > 54.90909:
+                                    if tamtotal_med_pacote <= 727.05882: return 'ftp' 
+                                    elif tamtotal_med_pacote > 727.05882: return 'p2p' 
+                            elif desv_padrao_tamtotal > 717.06683: return 'ftp' 
+                        elif tamtotal_med_pacote > 904.12108: return 'ftp' 
+elif codigo_protocolo > 6: return 'dns' 
