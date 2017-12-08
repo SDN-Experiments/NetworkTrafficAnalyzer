@@ -1,0 +1,56 @@
+codigo_protocolo <= 6
+|   dstporta <= 80
+|   |   com_med_cabecalhoIP <= 54.53933
+|   |   |   dstporta <= 21: ftp (8.0)
+|   |   |   dstporta > 21: web (19.0/1.0)
+|   |   com_med_cabecalhoIP > 54.53933
+|   |   |   tamtotal_pacote_maior <= 181
+|   |   |   |   tamtotal_pacote_maior <= 130: ftp (3.0)
+|   |   |   |   tamtotal_pacote_maior > 130: web (74.0)
+|   |   |   tamtotal_pacote_maior > 181: web (775.0)
+|   dstporta > 80
+|   |   srcporta <= 4410
+|   |   |   srcporta <= 80
+|   |   |   |   tamtotal_med_pacote <= 82.5
+|   |   |   |   |   srcporta <= 21: ftp (5.0)
+|   |   |   |   |   srcporta > 21: web (3.0/1.0)
+|   |   |   |   tamtotal_med_pacote > 82.5: web (366.0)
+|   |   |   srcporta > 80
+|   |   |   |   com_med_cabecalhoIP <= 55.125
+|   |   |   |   |   dstporta <= 57704: ssl (89.0/8.0)
+|   |   |   |   |   dstporta > 57704: web (3.0)
+|   |   |   |   com_med_cabecalhoIP > 55.125: ssl (536.0/2.0)
+|   |   srcporta > 4410
+|   |   |   dstporta <= 443: ssl (488.0/4.0)
+|   |   |   dstporta > 443
+|   |   |   |   tamtotal_pacote_maior <= 1492
+|   |   |   |   |   tamtotal_pacote_maior <= 201
+|   |   |   |   |   |   desv_padrao_tamtotal <= 17.6225
+|   |   |   |   |   |   |   tamtotal_pacote_maior <= 88: ftp (8.0/1.0)
+|   |   |   |   |   |   |   tamtotal_pacote_maior > 88: p2p (11.0)
+|   |   |   |   |   |   desv_padrao_tamtotal > 17.6225: p2p (818.0)
+|   |   |   |   |   tamtotal_pacote_maior > 201
+|   |   |   |   |   |   tamtotal_pacote_maior <= 253: ftp (58.0)
+|   |   |   |   |   |   tamtotal_pacote_maior > 253
+|   |   |   |   |   |   |   com_med_cabecalhoIP <= 56.95652: p2p (287.0/4.0)
+|   |   |   |   |   |   |   com_med_cabecalhoIP > 56.95652
+|   |   |   |   |   |   |   |   com_med_cabecalhoIP <= 57
+|   |   |   |   |   |   |   |   |   srcporta <= 50956: ftp (30.0)
+|   |   |   |   |   |   |   |   |   srcporta > 50956: p2p (3.0)
+|   |   |   |   |   |   |   |   com_med_cabecalhoIP > 57
+|   |   |   |   |   |   |   |   |   tamtotal_pacote_maior <= 458: ftp (3.0/1.0)
+|   |   |   |   |   |   |   |   |   tamtotal_pacote_maior > 458: p2p (46.0/1.0)
+|   |   |   |   tamtotal_pacote_maior > 1492
+|   |   |   |   |   srcporta <= 46800
+|   |   |   |   |   |   desv_padrao_tamtotal <= 723.68256: p2p (23.0/1.0)
+|   |   |   |   |   |   desv_padrao_tamtotal > 723.68256: ftp (35.0)
+|   |   |   |   |   srcporta > 46800
+|   |   |   |   |   |   tamtotal_med_pacote <= 904.12108
+|   |   |   |   |   |   |   desv_padrao_tamtotal <= 717.06683
+|   |   |   |   |   |   |   |   com_med_cabecalhoIP <= 54.90909: p2p (7.0)
+|   |   |   |   |   |   |   |   com_med_cabecalhoIP > 54.90909
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote <= 727.05882: ftp (111.0/3.0)
+|   |   |   |   |   |   |   |   |   tamtotal_med_pacote > 727.05882: p2p (3.0)
+|   |   |   |   |   |   |   desv_padrao_tamtotal > 717.06683: ftp (139.0)
+|   |   |   |   |   |   tamtotal_med_pacote > 904.12108: ftp (494.0)
+codigo_protocolo > 6: dns (1015.0)
