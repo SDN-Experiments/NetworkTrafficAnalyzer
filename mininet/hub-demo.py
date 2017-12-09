@@ -81,6 +81,19 @@ def stopDnsServer( host ):
     info( '* Stopping fake DNS server', host, 'at', host.IP(), '\n' )
     host.cmd( 'kill %dnsmasq' )
 
+def startFTPServer( host ):
+    "Start ftp server"
+    info( '* Starting FTP server', host, 'at', host.IP(), '\n' ) 
+    #host.cmd('kill %ftpd') 
+    host.cmd('inetd &')
+
+def stopFTPServer( host ):
+    "Stop ftp server"
+    info( '* Exiting ftp server', '\n' )
+
+
+
+
 def readline():
     "Read a line from stdin"
     return stdin.readline()
@@ -133,8 +146,8 @@ def webdemo2( ):
     #
     stopWebServer( h4 )
     #
-    h4.cmd('iperf -s -p 5000 &')
-    print h1.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
+    #h4.cmd('iperf -s -p 5000 &')
+    #print h1.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
 
     # #info( "***Testing bandwidth between client and server After...\n")
     # #print net.iperf( (h1, web) )
@@ -157,10 +170,24 @@ def webdemo2( ):
 
     print ('*** Testing bandwidth... \n')
     #h4.cmd('iperf -s -p 4000 &')
-    print h2.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
+    #print h2.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
     print('------------------------------------------------------------')
     # print net.iperf( (h2, h4) )
 
+    print('------------------------------------------------------------')
+    print ('*** Testing Flow FTP... \n')
+    startFTPServer( h4 )
+
+
+    clientRequestToServerFTP(h3,h4)
+
+    stopFTPServer( h4 )
+
+    print ('*** Testing bandwidth... \n')
+    #h4.cmd('iperf -s -p 4000 &')
+    #print h2.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
+    print('------------------------------------------------------------')
+    # print net.iperf( (h2, h4) )	
     net.stop()
 
 def clientRequestToServerDNS(h1, h4):
@@ -181,6 +208,11 @@ def clientRequestToServerWEB(h1, h4):
         # qt= qt + 1
     print h1.cmd( 'curl http://' + h4.IP() + '/index.html' )
     info( '*** End Fetching Web Page!:\n' )
+
+def clientRequestToServerFTP(client, server):
+    info( '* Requesting to FTP server', client, 'at', client.IP(), '\n' )
+    print client.cmd('lftp -u ubuntu,ubuntu -e ',  '"cd ftp;get temp.ftp;quit" ', server.IP())
+
 
 def usage():
     "Print usage message"
