@@ -38,14 +38,11 @@ from ftplib import FTP
 
 def checkRequired():
     "Check for required executables"
-    required = [ 'udhcpd', 'udhcpc', 'dnsmasq', 'curl', 'firefox' ]
+    required = [ 'ftpd',  'lftp' ]
     for r in required:
         if not quietRun( 'which ' + r ):
             print '* Installing', r
             print quietRun( 'apt-get install -y ' + r )
-            if r == 'dnsmasq':
-                # Don't run dnsmasq by default!
-                print quietRun( 'update-rc.d dnsmasq disable' )
 
 class FtpTopo( Topo ):
     """Topology for Ftp Demo:
@@ -53,38 +50,36 @@ class FtpTopo( Topo ):
                   """
     def __init__( self, *args, **kwargs ):
         Topo.__init__( self, *args, **kwargs )
-        client = self.addHost( 'h1', ip='10.0.0.10/24' )
+        client = self.addHost( 'h1' )
         switch = self.addSwitch( 's1', protocols=["OpenFlow13"] )
-        ftp = self.addHost( 'ftp', ip='10.0.0.50/24')
+        ftp = self.addHost( 'ftp')
         #c0 = self.addController( 'c0', controller=RemoteController, ip='192.168.56.104', port=6633 )
         self.addLink( client, switch )
-        self.addLink( ftp, switch, bw=10, delay='500ms' )
+        self.addLink( ftp, switch, bw=1000 )
 
 # ftp server
 
 def startFTPServer( host ):
     "Start ftp server"
-    info( '* Starting FTP server', host, 'at', host.IP(), '\n' )
-    print host.cmd('sudo python ./flow/ftp-server.py &')
-    #print host.cmd('sudo sftp -D ' + "'/home/ubuntu/ftp/temp.ftp'")
-
-
+    info( '* Starting FTP server', host, 'at', host.IP(), '\n' ) 
+    #host.cmd('kill %ftpd') 
+    host.cmd('inetd &')
 
 def stopFTPServer( host ):
     "Stop ftp server"
-    info( '* Stopping ftp server', host, 'at', host.IP(), '\n' )
-    #server.close_all()
+    info( '* Exiting ftp server', '\n' )
 
 def clientRequestToServer(client, server):
-    # Make sure we can fetch get request
-    info( '* Fetching file FTP server:\n' )
-
-    #print client.cmd('wget ftp://ubuntu:ubuntu@' + server.IP() + '/temp.ftp')
-    # print client.cmd('curl ftp://' + server.IP() + '/ftp/temp.ftp --user ubuntu:ubuntu -o  temp.ftp')
-    # print client.cmd('curl ftp://' + server.IP() + '/ftp/temp.ftp --user ubuntu:ubuntu')
-    #print client.cmd('curl ftp://' + server.IP() + '/home/ubuntu/ftp/temp.ftp')
-    #print client.cmd(' curl --ftp-ssl --user ubuntu:ubuntu ftp://' + server.IP() + '/temp.ft')
-    print client.cmd('sudo python ./flow/ftp-client.py')
+    #print client.cmd('pftp -u ubuntu,ubuntu -e "get myfile;quit" ' + server.IP())
+    info( '* Requesting to FTP server', client, 'at', client.IP(), '\n' )
+    #client.cmd( 'cd Downloads')
+    #print client.cmd( 'pwd')
+    #print client.cmd('cd Downloads')
+    print client.cmd('lftp -u ubuntu,ubuntu -e ',  '"cd ftp;get temp.ftp;quit" ', server.IP())
+    #print client.cmd('lftp -e ''cd ftp/; get temp.ftp'' -u ubuntu,ubuntu 10.0.0.2')
+    #print client.cmd( 'curl ftp://10.0.0.1/myfile' )
+   
+         
 
 
 def readline():
@@ -99,11 +94,6 @@ def prompt( s=None ):
     print s,
     return readline()
 
-def verifyConnection(client, server):
-    print client.cmd('ping -c 1 ' + server.IP())
-    print server.cmd('ping -c 1 ' + client.IP())
-
-
 def ftpdemo( ):
     "Rogue ftp server demonstration"
     #checkRequired()
@@ -117,10 +107,11 @@ def ftpdemo( ):
 
     h1, ftp, sw = net.get( 'h1', 'ftp' , 's1')
 
+    #checkRequire()
 
 
     net.start()
-
+    #net.iperf((h1,ftp))
     startFTPServer( ftp )
 
     clientRequestToServer(h1,ftp)
