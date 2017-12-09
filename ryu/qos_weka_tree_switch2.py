@@ -111,6 +111,7 @@ class WekaTreeSwitch2(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
         in_port = msg.match['in_port']
+        header_length_bytes = 0
 
         pkt = packet.Packet(msg.data)
 
@@ -141,6 +142,8 @@ class WekaTreeSwitch2(app_manager.RyuApp):
             self.logger.debug("(TCP):  %s ", tcp_temp)
             self.logger.debug("(UDP):  %s ", udp_temp)
 
+            header_length_bytes = (ipv4_temp.header_length*32)/8
+
             #Web
             if tcp_temp != None and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]) and ipv4_temp.proto == 6:
                 self.logger.debug("*** Info  Extracting Attributes Choosen... ")
@@ -159,14 +162,14 @@ class WekaTreeSwitch2(app_manager.RyuApp):
                 if len(self.host2host_instance) > 0:
                     if  key in self.host2host_instance:
                         h2h = self.host2host_instance[key]
-                        h2h.updateStateHostToHostByPacket(payload)
+                        h2h.updateStateHostToHostByPacket(ipv4_temp.total_length,header_length_bytes)
                     else:
                         #self.host2host_instance.setdefault(src + dst, {})
-                        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,6 )
                         self.host2host_instance[key] = h2h
                 else:
                     #self.host2host_instance.setdefault(src + dst, {})
-                    h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
+                    h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,6 )
                     self.host2host_instance[key] = h2h
 
 
@@ -179,7 +182,10 @@ class WekaTreeSwitch2(app_manager.RyuApp):
                 h2h.dst_port,
                 h2h.smaller_packet_size,
                 h2h.bigger_packet_size,
-                h2h.protocol_code
+                h2h.protocol_code,
+                h2h.length_header_average,
+                h2h.median_packet_size,
+                h2h.std_dev_packet_size
                 )
                 fluxo_classe_temp = fluxo_classe
                 self.logger.debug("(Class):  %s", fluxo_classe)
@@ -200,14 +206,14 @@ class WekaTreeSwitch2(app_manager.RyuApp):
                 if len(self.host2host_instance) > 0:
                     if  key in self.host2host_instance:
                         h2h = self.host2host_instance[key]
-                        h2h.updateStateHostToHostByPacket(payload)
+                        h2h.updateStateHostToHostByPacket(ipv4_temp.total_length,header_length_bytes)
                     else:
                         #self.host2host_instance.setdefault(src + dst, {})
-                        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,header_length_bytes,UDP_CODE )
                         self.host2host_instance[key] = h2h
                 else:
                     #self.host2host_instance.setdefault(src + dst, {})
-                    h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,UDP_CODE )
+                    h2h = host2host(udp_temp.src_port, udp_temp.dst_port,payload,ipv4_temp.total_length,header_length_bytes,UDP_CODE )
                     self.host2host_instance[key] = h2h
 
 
@@ -220,7 +226,10 @@ class WekaTreeSwitch2(app_manager.RyuApp):
                 h2h.dst_port,
                 h2h.smaller_packet_size,
                 h2h.bigger_packet_size,
-                h2h.protocol_code
+                h2h.protocol_code,
+                h2h.length_header_average,
+                h2h.median_packet_size,
+                h2h.std_dev_packet_size
                 )
                 fluxo_classe_temp = fluxo_classe
                 self.logger.debug("(Class):  %s", fluxo_classe)
@@ -302,32 +311,64 @@ class WekaTreeSwitch2(app_manager.RyuApp):
                                   in_port=in_port, actions=actions, data=data)
         datapath.send_msg(out)
 
-    def weka_decision_tree(self, srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo):
+    def weka_decision_tree(self, srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo,com_med_cabecalhoIP,tamtotal_med_pacote,desv_padrao_tamtotal):
         if codigo_protocolo <= 6:
-            if tamtotal_pacote_menor <= 54:
-                return 'ftp'
-            elif tamtotal_pacote_menor > 54:
-                if dstporta <= 80:
-                    return 'web'
-                elif dstporta > 80:
-                    if srcporta <= 2632:
-                        return 'web'
-                    elif srcporta > 2632:
-                        if tamtotal_pacote_menor <= 60:
-                            if dstporta <= 7957:
-                                if dstporta <= 443:
-                                    return 'web'
-                                elif dstporta > 443:
-                                    return 'p2p'
-                            elif dstporta > 7957:
-                                return 'p2p'
-                        elif tamtotal_pacote_menor > 60:
-                            if tamtotal_pacote_maior <= 81:
-                                return 'ftp'
-                            elif tamtotal_pacote_maior > 81:
-                                return 'p2p'
-        elif codigo_protocolo > 6:
-            return 'dns'
+            if dstporta <= 80:
+                if com_med_cabecalhoIP <= 54.53933:
+                    if dstporta <= 21: return 'ftp' 
+                    elif dstporta > 21: return 'web' 
+                elif com_med_cabecalhoIP > 54.53933:
+                    if tamtotal_pacote_maior <= 181:
+                        if tamtotal_pacote_maior <= 130: return 'ftp' 
+                        elif tamtotal_pacote_maior > 130: return 'web' 
+                    elif tamtotal_pacote_maior > 181: return 'web' 
+            elif dstporta > 80:
+                if srcporta <= 4410:
+                    if srcporta <= 80:
+                        if tamtotal_med_pacote <= 82.5:
+                            if srcporta <= 21: return 'ftp' 
+                            elif srcporta > 21: return 'web' 
+                        elif tamtotal_med_pacote > 82.5: return 'web' 
+                    elif srcporta > 80:
+                        if com_med_cabecalhoIP <= 55.125:
+                            if dstporta <= 57704: return 'ssl' 
+                            elif dstporta > 57704: return 'web' 
+                        elif com_med_cabecalhoIP > 55.125: return 'ssl' 
+                elif srcporta > 4410:
+                    if dstporta <= 443: return 'ssl' 
+                    elif dstporta > 443:
+                        if tamtotal_pacote_maior <= 1492:
+                            if tamtotal_pacote_maior <= 201:
+                                if desv_padrao_tamtotal <= 17.6225:
+                                    if tamtotal_pacote_maior <= 88: return 'ftp' 
+                                    elif tamtotal_pacote_maior > 88: return 'p2p' 
+                                elif desv_padrao_tamtotal > 17.6225: return 'p2p' 
+                            elif tamtotal_pacote_maior > 201:
+                                if tamtotal_pacote_maior <= 253: return 'ftp' 
+                                elif tamtotal_pacote_maior > 253:
+                                    if com_med_cabecalhoIP <= 56.95652: return 'p2p' 
+                                    elif com_med_cabecalhoIP > 56.95652:
+                                        if com_med_cabecalhoIP <= 57:
+                                            if srcporta <= 50956: return 'ftp' 
+                                            elif srcporta > 50956: return 'p2p' 
+                                        elif com_med_cabecalhoIP > 57:
+                                            if tamtotal_pacote_maior <= 458: return 'ftp' 
+                                            elif tamtotal_pacote_maior > 458: return 'p2p' 
+                        elif tamtotal_pacote_maior > 1492:
+                            if srcporta <= 46800:
+                                if desv_padrao_tamtotal <= 723.68256: return 'p2p' 
+                                elif desv_padrao_tamtotal > 723.68256: return 'ftp' 
+                            elif srcporta > 46800:
+                                if tamtotal_med_pacote <= 904.12108:
+                                    if desv_padrao_tamtotal <= 717.06683:
+                                        if com_med_cabecalhoIP <= 54.90909: return 'p2p' 
+                                        elif com_med_cabecalhoIP > 54.90909:
+                                            if tamtotal_med_pacote <= 727.05882: return 'ftp' 
+                                            elif tamtotal_med_pacote > 727.05882: return 'p2p' 
+                                    elif desv_padrao_tamtotal > 717.06683: return 'ftp' 
+                                elif tamtotal_med_pacote > 904.12108: return 'ftp' 
+        elif codigo_protocolo > 6: return 'dns' 
+
 
     def printInstanceH2H(self):
         for key in self.host2host_instance:
@@ -340,6 +381,8 @@ class WekaTreeSwitch2(app_manager.RyuApp):
             self.logger.debug("(sum_size_packet) : %s",self.host2host_instance[key].sum_size_packet )
             self.logger.debug("(median_packet_size ) : %s",self.host2host_instance[key].median_packet_size )
             self.logger.debug("(var_packet_size) : %s",self.host2host_instance[key].var_packet_size )
+            self.logger.debug("(sum_length_header) : %s",self.host2host_instance[key].sum_length_header )
+            self.logger.debug("(length_header_average) : %s",self.host2host_instance[key].length_header_average )
             self.logger.debug("(std_dev_packet_size ) : %s",self.host2host_instance[key].std_dev_packet_size )
             self.logger.debug("(history_packet_size ) : %s",self.host2host_instance[key].values_size_packet )
             self.logger.debug("============== /// ==============")
@@ -369,6 +412,8 @@ class host2host(object):
     std_dev_packet_size = 0
     var_packet_size = 0.0
 
+    sum_length_header = 0
+    length_header_average = 0
     sum_size_packet = 0
     qt_packets = 0
     values_size_packet = []
@@ -396,21 +441,25 @@ class host2host(object):
         self.qt_packets += 1
         self.values_size_packet.append(self.size_packet)
         self.sum_size_packet += self.size_packet
+        self.sum_length_header += self.length_header_IP
         self.checkGreaterBytesPacket(self.size_packet)
         self.checkSmallerBytesPacket(self.size_packet)
         self.computeAverage()
         self.computeVariance()
+        self.computeAverageHeaderLength()
         self.computeStandardDeviation()
 
 
-    def updateStateHostToHostByPacket(self, size_packet):
+    def updateStateHostToHostByPacket(self, size_packet,length_header_IP):
         self.qt_packets += 1
         self.values_size_packet.append(size_packet)
         self.sum_size_packet += size_packet
+        self.sum_length_header += length_header_IP
         self.checkGreaterBytesPacket(size_packet)
         self.checkSmallerBytesPacket(size_packet)
         self.computeAverage()
         self.computeVariance()
+        self.computeAverageHeaderLength()
         self.computeStandardDeviation()
 
     def checkSmallerBytesPacket(self, bytesPacket):
@@ -426,6 +475,9 @@ class host2host(object):
 
     def computeStandardDeviation(self):
         self.std_dev_packet_size = math.sqrt(self.var_packet_size)
+
+    def computeAverageHeaderLength(self):
+        self.length_header_average = self.sum_length_header / self.qt_packets
 
     def computeVariance(self):
         sum_variance = 0.0
