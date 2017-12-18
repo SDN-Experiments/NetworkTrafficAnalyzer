@@ -105,11 +105,10 @@ def webdemo2( ):
     # (Executing OVSDB queue)
     
     #switches =  net.switches
-    for switch in net.switches:
-	last_intf = switch.ports[intf-1]
-	print last_intf
-	popens[server] = s1.popen('cd qos-command')
-	popens[server] = s1.popen('sudo ./ovs-qos-run ' + last_intf  )
+    for switch in  net.switches:
+	print switch.ports[intf-1]
+	#popens[server] = s1.popen('cd qos-command')
+	#popens[server] = s1.popen('sudo ./ovs-qos-run')
 
     
     # (Starting up HTTP Server)

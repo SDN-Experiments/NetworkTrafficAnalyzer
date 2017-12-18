@@ -42,14 +42,14 @@ BROADCAST_IP = '255.255.255.255'
 
 
 
-class WekaTreeSwitch2(app_manager.RyuApp):
+class WekaTreeSwitch1_5(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
-        super(WekaTreeSwitch2, self).__init__(*args, **kwargs)
+        super(WekaTreeSwitch1_5, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.host2host_instance = {}
-	self.label_flow={'web':[],'dns':[],'ftp':[],'p2p':[], 'ssl' : []}
+	self.label_flow={'web':0,'dns':0,'ftp':0,'p2p':0, 'ssl' : 0}
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -124,6 +124,7 @@ class WekaTreeSwitch2(app_manager.RyuApp):
 
         dst = eth.dst
         src = eth.src
+
         fluxo_classe_temp = None
         #Tamanho Janela TCP
         if eth.ethertype == ether_types.ETH_TYPE_IP:
@@ -148,77 +149,59 @@ class WekaTreeSwitch2(app_manager.RyuApp):
             self.logger.debug("(UDP):  %s ", udp_temp)
 	    header_length_bytes = (ipv4_temp.header_length * 32)/8
 
-            #Web
-	    if ipv4_temp.dst != MULTICAST_IP_1 and ipv4_temp.dst != MULTICAST_IP_2 and  ipv4_temp.dst != BROADCAST_IP:
-		    if tcp_temp != None and self.hasFlagsClientToServerTCP(tcp_temp.bits,[TCP_SYN,TCP_ACK]) and ipv4_temp.proto == 6:
-		        self.logger.debug("*** Info  Extracting Attributes Choosen... ")
-		        self.logger.debug("(TCP) porta Origem:  %s ", tcp_temp.src_port)
-		        self.logger.debug("(TCP) Porta Destino :  %s ", tcp_temp.dst_port)
+            fluxo_classe_temp = None
+        if eth.ethertype == ether_types.ETH_TYPE_IP:
+            ipv4_temp = pkt.get_protocol(ipv4.ipv4)
+            tcp_temp = pkt.get_protocol(tcp.tcp)
 
-		        self.logger.debug("(TCP) Tamanho Janela :  %s ", tcp_temp.window_size)
+            udp_temp = pkt.get_protocol(udp.udp)
+            #Clinte-To-Server
+            self.logger.debug("------------------------------------------------------------")
+	    self.logger.debug("---------------------- *** Packet Attributes *** ----------------------")
+            #self.logger.debug("(PKT):  %s ", pkt)
+            # Tamanho Payloada
+            payload = sys.getsizeof(pkt.data)
+	    #self.logger.debug("(IP):  %s ", ipv4_temp)
+            self.logger.debug("(PKT) Packet Size :  %s ", payload)
+            self.logger.debug("(IP) Code Protocol:   %s ", ipv4_temp.proto)
+            #comprimento Pacote Ip
+            self.logger.debug("(IP) Comprimento :  %s ", ipv4_temp.total_length)
+	    header_length_bytes = (ipv4_temp.header_length * 32)/8
+            #Comprimento comp_cabecalho TCP
+            self.logger.debug("(IP) Comprimento Cabecalho :  %s ",header_length_bytes )
 
+                    
+	    if ipv4_temp.dst != MULTICAST_IP_1 and ipv4_temp.dst != MULTICAST_IP_2 and ipv4_temp.dst != BROADCAST_IP:
+	        temp_port_src = None    
+	        temp_port_dst = None
+   	        
+	        if tcp_temp != None and ipv4_temp.proto == 6:
+		    
+		    temp_port_src = tcp_temp.src_port
+		    temp_port_dst = tcp_temp.dst_port		
+	
+	    	elif udp_temp != None and ipv4_temp.proto == UDP_CODE:
 
+		    
+		    temp_port_src = udp_temp.src_port
+		    temp_port_dst = udp_temp.dst_port
+	    		    
 
-		        h2h = host2host(tcp_temp.src_port, tcp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,6 )
+	        self.logger.debug("Porta Origem:  %s ", temp_port_src)
+	        self.logger.debug("Porta Destino :  %s ", temp_port_dst)
 
-		        #self.printInstanceH2H()
+                h2h = host2host(temp_port_src, temp_port_dst,ipv4_temp.total_length,header_length_bytes,ipv4_temp.proto)
+	        fluxo_classe = self.weka_decision_tree(h2h.median_packet_size, h2h.std_dev_packet_size, h2h.var_packet_size, h2h.bigger_packet_size, h2h.smaller_packet_size,h2h.length_header_average, h2h.protocol_code, h2h.src_port, h2h.dst_port)
 
-		        #Classificador J48 Tree
-		        #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
-		        #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
-	#weka_decision_tree(self, tamtotal_med_pacote, desv_padrao_tamtotal, variancia_tamtotal, tamtotal_pacote_maior, tamtotal_pacote_menor, com_med_cabecalhoIP, codigo_protocolo, srcporta, dstporta)
-		        fluxo_classe = self.weka_decision_tree(h2h.median_packet_size,
-			h2h.std_dev_packet_size, 
-			h2h.var_packet_size, 
-			h2h.bigger_packet_size, 
-			h2h.smaller_packet_size,
-			h2h.length_header_average, 
-			h2h.protocol_code, 
-			h2h.src_port, 
-			h2h.dst_port)
-		        fluxo_classe_temp = fluxo_classe
-		        self.logger.debug("------------------------------------------------------------")
-		        self.logger.debug("----------------------- *** Definition Class *** ----------------------")
-		        self.logger.debug("(Class)=  %s", fluxo_classe)
-
-
-		    elif udp_temp != None and ipv4_temp.proto == UDP_CODE:
-		 	self.logger.debug("*** Info  Extracting Attributes (UDP) Choosen... ")
-		        self.logger.debug("(UDP) porta Origem:  %s ", udp_temp.src_port)
-		        self.logger.debug("(UDP) Porta Destino :  %s ", udp_temp.dst_port)
-
-		        self.logger.debug("============== /// ==============")
-
-		        #dpid = datapath.id
-		        #self.host2host_instance.setdefault(dpid, {})
-
-		        h2h = host2host(udp_temp.src_port, udp_temp.dst_port,ipv4_temp.total_length,header_length_bytes,UDP_CODE )
-
-
-
-		        #self.printInstanceH2H()
-
-		        #Classificador J48 Tree
-		        #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
-		        #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
-		        fluxo_classe = self.weka_decision_tree(h2h.median_packet_size,
-			h2h.std_dev_packet_size, 
-			h2h.var_packet_size, 
-			h2h.bigger_packet_size, 
-			h2h.smaller_packet_size,
-			h2h.length_header_average, 
-			h2h.protocol_code, 
-			h2h.src_port, 
-			h2h.dst_port)
-		        fluxo_classe_temp = fluxo_classe
-		        self.logger.debug("------------------------------------------------------------")
-		        self.logger.debug("----------------------- *** Definition Class *** ----------------------")
-		        self.logger.debug("(Class)=  %s", fluxo_classe)
-
-	if fluxo_classe_temp != None:
-		self.label_flow[fluxo_classe_temp].append(h2h)
-		for rotul_flow in self.label_flow:
-		    print rotul_flow + ' = ' +  str(len(self.label_flow[rotul_flow]))
+	        self.logger.debug("------------------------------------------------------------")
+	        self.logger.debug("----------------------- *** Definition Class *** ----------------------")
+	        self.logger.debug("(Class)=  %s", fluxo_classe)
+	        self.logger.debug("------------------------------------------------------------")	    	
+	    	self.logger.debug("----------------------- *** Aggreation Class *** ----------------------")
+		self.label_flow[fluxo_classe] =  self.label_flow[fluxo_classe] + 1
+		for flow in self.label_flow:
+		      print flow + " =  %d" %  self.label_flow[flow]
+		    
 
 	
         dpid = datapath.id

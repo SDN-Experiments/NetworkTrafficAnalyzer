@@ -6,7 +6,6 @@ from mininet.cli import CLI
 from mininet.util import quietRun
 from mininet.log import setLogLevel, info
 from mininet.term import makeTerms
-import mininet.util as util
 from mininet.node import Controller, RemoteController, OVSKernelSwitch, UserSwitch
 
 #from mininet.examples.nat import connectToInternet, stopNAT
@@ -15,9 +14,6 @@ from sys import exit, stdin, argv
 from re import findall
 from time import sleep
 import os
-import threading
-import time
-from random import randint
 
 def checkRequired():
     "Check for required executables"
@@ -47,7 +43,7 @@ class WebTopo2( Topo ):
         #LAN1
         self.addLink( h1, s1 ,bw=15)
         self.addLink( h2, s1 ,bw=15)
-        self.addLink( h3, s1 )
+        self.addLink( h3, s1 , bw =15)
         #LAN2
         self.addLink( h4, s2 )
         self.addLink( s1, s2 )
@@ -59,21 +55,21 @@ def startWebServer( host ):
     "Start evil web server"
     info( '* Starting web server', host, 'at', host.IP(), '\n' )
     webdir = '/tmp/webserver'
-    host.cmd( 'rm -rf', webdir, ' &')
-    host.cmd( 'mkdir -p', webdir, ' &' )
+    host.cmd( 'rm -rf', webdir )
+    host.cmd( 'mkdir -p', webdir )
     with open( webdir + '/index.html', 'w' ) as f:
         # If we wanted to be truly evil, we could add this
         # to make it hard to retype URLs in firefox
         # f.write( '<meta http-equiv="refresh" content="1"> \n' )
         f.write( '<html><p>SDN is already a reality!<p>\n'
                  '<body></body></html>' )
-    host.cmd( 'cd', webdir, '&')
+    host.cmd( 'cd', webdir )
     host.cmd( 'python -m SimpleHTTPServer 80 >& /tmp/http.log &' )
 
 def stopWebServer( host ):
     "Stop evil web server"
     info( '* Stopping web server', host, 'at', host.IP(), '\n' )
-    host.cmd( 'kill %python &' )
+    host.cmd( 'kill %python' )
 
 def startDnsServer( host ):
     "Start Fake DNS server"
@@ -83,7 +79,7 @@ def startDnsServer( host ):
 def stopDnsServer( host ):
     "Stop Fake DNS server"
     info( '* Stopping fake DNS server', host, 'at', host.IP(), '\n' )
-    host.cmd( 'kill %dnsmasq &' )
+    host.cmd( 'kill %dnsmasq' )
 
 def startFTPServer( host ):
     "Start ftp server"
@@ -122,79 +118,83 @@ def webdemo2( ):
       autoSetMacs=True)
 
     #h1, web, sw = net.get( 'h1', 'web' , 's1')
-    ryu = net.get('c0')
-    info( "***Testing bandwidth between client and server (BEFORE)...\n")
+    h1,h2,h3,h4,s1,ryu = net.get( 'h1', 'h2', 'h3','h4', 's1', 'c0')
+    #info( "***Testing bandwidth between client and server Before...\n")
 
 
 
-    
-
-    
-   
-  
-
-
-
-    info( "***Testing bandwidth between client and server (AFTER)...\n")
-    
-    popens = {}
-
-    server = net.get('h4')
     net.start()
 
+    print ('*** Testing bandwidth Web... \n')
+    h4.cmd('iperf -s -p 80 &')
+    print h1.cmd('iperf -c ' +  h4.IP() + ' -p 80')
+    print net.iperf( (h1, h4) )
+    print ('*** Testing bandwidth DNS... \n')
+    h4.cmd('iperf -s -p 80 &')
+    print net.iperf( (h2, h4) )
 
-
-    
+    print('------------------------------------------------------------')
     print ryu.cmd('cd qos-command')
     print ryu.cmd('sudo ./ovs-qos-run')
-    
-    webdir = '/tmp/webserver'
 
-    popens[server] = server.popen('iperf -c ' +  server.IP() + ' -p 4000 &' )
-    popens[server] = server.popen( "cd ", webdir, " &"  )
-    popens[server] = server.popen("python -u-m SimpleHTTPServer 80 >& /tmp/http.log &")
-    sleep(1)  # Wait for the server to start up.
-    popens[server] = server.popen('dnsmasq -k -A /#/%s 1>/tmp/dns.log 2>&1 &' %  server.IP())
-    sleep(1)  # Wait for the server to start up.
-    popens[server] = server.popen("inetd &")
-    sleep(1)  # Wait for the server to start up.
+    # print ('*** Testing bandwidth... \n')
+    # print net.iperf( (h2, h4) )
 
-    cont = 1
-    for client in net.hosts:
-	
-	popens[client] = client.popen("wget -O - {}".format(server.IP() + " &"))
-	
+    print('------------------------------------------------------------')
+    print ('*** Testing Flow Web... \n')
+    startWebServer(h4)
+    clientRequestToServerWEB(h1, h4)
+    #
+    stopWebServer( h4 )
+    #
+    #h4.cmd('iperf -s -p 5000 &')
+    #print h1.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
 
-	popens[client] = client.popen("nslookup 10.0.0.4 ")
+    # #info( "***Testing bandwidth between client and server After...\n")
+    # #print net.iperf( (h1, web) )
+    # print ('*** Testing bandwidth... \n')
+    # print net.iperf( (h1, h4) )
+    # # h4.cmd('iperf -s -p 4000 &')
+    # # print h1.cmd('iperf -c ' +  h4.IP() + ' -p 4000')
+    #
+    #
+    #
+    # stopWebServer( h4 )
+    print('------------------------------------------------------------')
+    print ('*** Testing Flow DNS... \n')
+    startDnsServer( h4 )
 
-	popens[client] = client.popen('lftp -u ubuntu,ubuntu -e ',  '"cd ftp;get temp.ftp;quit" ', server.IP() , ' &')
-	popens[client] = client.popen('rm temp.ftp &')
- 	
-	popens[client] = client.popen('iperf -c ' +  server.IP() + ' -p 4000' )
-    	cont = cont + 1
-    popens[server] = server.popen('kill %dnsmasq &')
-    popens[server] = server.popen('kill %python &')
-    
+
+    clientRequestToServerDNS(h2,h4)
+
+    stopDnsServer( h4 )
+
+    print ('*** Testing bandwidth... \n')
+    #h4.cmd('iperf -s -p 4000 &')
+    #print h2.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
+    print('------------------------------------------------------------')
+    # print net.iperf( (h2, h4) )
+
+    print('------------------------------------------------------------')
+    print ('*** Testing Flow FTP... \n')
+    startFTPServer( h4 )
 
 
-    try:
-        for host, line in util.pmonitor(popens):
-            if host:
-                print(host.name, line)
-	
-    finally:
-        # Don't leave things running if this script crashes.
-        for process in popens.values():
-            if not process.poll():
-                process.kill()
+    clientRequestToServerFTP(h3,h4)
 
- 
+    stopFTPServer( h4 )
+
+    print ('*** Testing bandwidth... \n')
+    h4.cmd('iperf -s -p 4000 &')
+    print h2.cmd('iperf -c ' +  h4.IP() + ' -p 5000')
+    print('------------------------------------------------------------')
+    print net.iperf( (h2, h4) )	
     net.stop()
 
 def clientRequestToServerDNS(h1, h4):
     info( '*** Request NsLookup google.com...\n' )
 
-    print h1.cmd( 'nslookup 10.0.0.4 &' )
+    print h1.cmd( 'nslookup 10.0.0.4 ' )
 
 def clientRequestToServerWEB(h1, h4):
     # Make sure we can fetch get request
@@ -207,12 +207,12 @@ def clientRequestToServerWEB(h1, h4):
 
         # print h1.cmd( 'curl http://' + h4.IP() + '/index.html' )
         # qt= qt + 1
-    print h1.cmd( 'curl http://' + h4.IP() + '/index.html &' )
+    print h1.cmd( 'curl http://' + h4.IP() + '/index.html' )
     info( '*** End Fetching Web Page!:\n' )
 
 def clientRequestToServerFTP(client, server):
     info( '* Requesting to FTP server', client, 'at', client.IP(), '\n' )
-    print client.cmd('lftp -u ubuntu,ubuntu -e ',  '"cd ftp;get temp.ftp;quit" ', server.IP() + ' &')
+    print client.cmd('lftp -u ubuntu,ubuntu -e ',  '"cd ftp;get temp.ftp;quit" ', server.IP())
 
 
 def usage():

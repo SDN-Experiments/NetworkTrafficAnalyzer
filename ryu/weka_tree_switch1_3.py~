@@ -177,15 +177,12 @@ class WekaTreeSwitch(app_manager.RyuApp):
                 #Classificador J48 Tree
                 #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
                 #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
-                fluxo_classe = self.weka_decision_tree(h2h.median_packet_size,
-		    h2h.std_dev_packet_size, 
-     		    h2h.var_packet_size, 
-		    h2h.bigger_packet_size, 
-		    h2h.smaller_packet_size,
-		    h2h.length_header_average, 
-		    h2h.protocol_code, 
-		    h2h.src_port, 
-		    h2h.dst_port)
+                fluxo_classe = self.weka_decision_tree(h2h.src_port,
+                h2h.dst_port,
+                h2h.smaller_packet_size,
+                h2h.bigger_packet_size,
+                h2h.protocol_code
+                )
 
                 self.logger.debug("(Class):  %s", fluxo_classe)
 
@@ -221,15 +218,12 @@ class WekaTreeSwitch(app_manager.RyuApp):
                 #Classificador J48 Tree
                 #host2host = host2host(tcp_temp.src_port, tcp_temp.dst_port,payload,ipv4_temp.total_length,6 )
                 #srcporta,dstporta, tamtotal_pacote_menor,tamtotal_pacote_maior,codigo_protocolo
-                fluxo_classe = self.weka_decision_tree(h2h.median_packet_size,
-		    h2h.std_dev_packet_size, 
-     		    h2h.var_packet_size, 
-		    h2h.bigger_packet_size, 
-		    h2h.smaller_packet_size,
-		    h2h.length_header_average, 
-		    h2h.protocol_code, 
-		    h2h.src_port, 
-		    h2h.dst_port)
+                fluxo_classe = self.weka_decision_tree(h2h.src_port,
+                h2h.dst_port,
+                h2h.smaller_packet_size,
+                h2h.bigger_packet_size,
+                h2h.protocol_code
+                )
 
                 self.logger.debug("(Class):  %s", fluxo_classe)
 
